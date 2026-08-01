@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Local Audio Player</title>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- THEME & LAYOUT --- */
+        *, *::before, *::after { box-sizing: border-box; }
+        
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background-color: #000000; /* Black Background */
+            color: #FFFFFF; /* White Foreground */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- HEADER --- */
+        .header {
+            text-align: center;
+            padding: 20px 10px 15px 10px;
+            border-bottom: 2px solid #FFD700; /* Golden */
+            background: linear-gradient(180deg, #1a1a1a 0%, #000000 100%);
+            flex-shrink: 0;
+        }
+
+        .header h2 {
+            margin: 0;
+            color: #FFF44F; /* Lemon Yellow */
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 24px;
+            text-shadow: 0px 2px 4px rgba(255, 215, 0, 0.3);
+        }
+
+        /* --- CONTROLS & BUTTONS --- */
+        .controls-wrapper {
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            background-color: transparent;
+            color: #FFD700; /* Golden */
+            border: 2px solid #FFD700;
+            padding: 12px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            flex: 1;
+            max-width: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn:hover, .btn:active {
+            background-color: #FFD700; /* Golden */
+            color: #000000;
+            border-color: #FFF44F; /* Lemon Yellow */
+            box-shadow: 0px 0px 15px rgba(255, 244, 79, 0.4);
+        }
+
+        /* --- AUDIO PLAYER & MEDIA CONTROLS --- */
+        .player-section {
+            padding: 10px 20px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .now-playing {
+            color: #0a0a00; /* User custom color kept */
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            max-width: 90%;
+        }
+
+        audio {
+            width: 100%;
+            max-width: 600px;
+            height: 50px;
+            outline: none;
+            border-radius: 25px;
+        }
+
+        audio::-webkit-media-controls-panel {
+            background-color: #353432; 
+        }
+        audio::-webkit-media-controls-play-button,
+        audio::-webkit-media-controls-mute-button {
+            background-color: #FFF44F; /* Lemon Yellow */
+            border-radius: 50%;
+        }
+
+        /* Custom Prev/Pause/Next Buttons */
+        .media-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 25px;
+            margin-top: 15px;
+            width: 100%;
+        }
+
+        .media-btn {
+            background-color: #111111;
+            color: #FFD700;
+            border: 2px solid #FFD700;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .media-btn:hover, .media-btn:active {
+            background-color: #FFD700;
+            color: #000000;
+            border-color: #FFF44F;
+            transform: scale(1.1);
+            box-shadow: 0px 0px 10px rgba(255, 215, 0, 0.3);
+        }
+
+        /* Make the Play/Pause button slightly larger */
+        #playPauseBtn {
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+        }
+
+        /* --- PLAYLIST --- */
+        .playlist-container {
+            flex: 1;
+            width: 100%;
+            overflow-y: auto;
+            padding: 10px 15px;
+        }
+
+        .song-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            padding-bottom: 10px;
+        }
+
+        .song-list li {
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: #111111;
+            border: 1px solid #333333;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            color: #FFFFFF; /* White */
+            display: flex;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .song-list li::before {
+            content: "🎵";
+            margin-right: 15px;
+            font-size: 18px;
+        }
+
+        .song-list li.active {
+            background-color: #221c00;
+            border-color: #FFD700; /* Golden */
+            color: #FFF44F; /* Lemon Yellow */
+            box-shadow: inset 0px 0px 10px rgba(255, 215, 0, 0.1);
+        }
+
+        .song-list li.active::before {
+            content: "▶";
+            color: #FFD700;
+        }
+
+        .playlist-container::-webkit-scrollbar { width: 6px; }
+        .playlist-container::-webkit-scrollbar-track { background: #000000; }
+        .playlist-container::-webkit-scrollbar-thumb { background: #FFD700; border-radius: 10px; }
+
+        /* --- FIXED BOTTOM FOOTER --- */
+        .footer-container {
+            display: flex; 
+            justify-content: space-evenly; 
+            align-items: center; 
+            flex-wrap: wrap; 
+            width: 100%; 
+            padding: 10px 0; 
+            gap: 10px;
+            margin-bottom: 0;
+            flex-shrink: 0;
+            background: linear-gradient(0deg, #1a1a1a 0%, #000000 100%);
+            border-top: 2px solid #FFD700; /* Golden border to match header */
+        }
+
+        .styled-text {
+            font-family: "Great Vibes", cursive, Arial, sans-serif;
+            font-size: clamp(24px, 6vw, 32px);
+            color: #FFF44F; /* Lemon Yellow to match theme */
+            font-weight: 300;
+            text-align: center;
+            line-height: 1.0;
+        }
+
+       /* --- HOME BUTTON STYLES --- */
+.home-icon {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    cursor: pointer;
+    border-radius: 50%;
+    width: 55px;  /* Keep home button normal size */
+    height: 55px;
+}
+
+.home-icon:hover {
+    transform: scale(1.1);
+    box-shadow: 0px 4px 10px rgba(255, 215, 0, 0.4);
+}
+
+.home-icon:active {
+    transform: scale(0.9);
+}
+
+/* --- REFRESH BUTTON STYLES --- */
+.refresh-icon {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    cursor: pointer;
+    border-radius: 50%;
+    width: 65px;  /* Made this larger to compensate for the smaller image */
+    height: 65px;
+}
+
+.refresh-icon:hover {
+    transform: scale(1.1);
+    box-shadow: 0px 4px 10px rgba(255, 215, 0, 0.4);
+}
+
+.refresh-icon:active {
+    transform: scale(0.9);
+}
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>JKRadio</h2>
+    </div>
+
+    <!-- Hidden File Inputs -->
+    <input type="file" id="filePicker" accept="audio/*" multiple style="display: none;" />
+    <input type="file" id="folderPicker" accept="audio/*" webkitdirectory directory multiple style="display: none;" />
+
+    <div class="controls-wrapper">
+        <button class="btn" onclick="document.getElementById('filePicker').click()">📁 Select Songs</button>
+        <button class="btn" onclick="document.getElementById('folderPicker').click()">📂 Select Folder</button>
+    </div>
+
+    <div class="player-section">
+        <div class="now-playing" id="nowPlayingText">Ready to play</div>
+        
+        <audio id="audioPlayer" controls playsinline>
+            Your browser does not support the audio element.
+        </audio>
+
+        <!-- NEW: Custom Media Controls -->
+        <div class="media-controls">
+            <button class="media-btn" id="prevBtn" aria-label="Previous">⏮</button>
+            <button class="media-btn" id="playPauseBtn" aria-label="Play/Pause">▶</button>
+            <button class="media-btn" id="nextBtn" aria-label="Next">⏭</button>
+        </div>
+    </div>
+
+    <div class="playlist-container">
+        <ul class="song-list" id="playlist">
+            <!-- Dynamically populated via JavaScript -->
+        </ul>
+    </div>
+
+   <!-- FIXED BOTTOM -->
+    <div class="footer-container">
+        <a href="tvhome.html" class="home-btn">
+            <img src="image/home.png" id="homeButton" alt="Back To Home" class="home-icon">
+        </a>
+        <div class="styled-text">Jatinder</div>
+        <img src="image/refresh.jpg" alt="Reload" id="refreshButton" onclick="location.reload();" class="refresh-icon">
+    </div>
+
+   <script>
+        const filePicker = document.getElementById('filePicker');
+        const folderPicker = document.getElementById('folderPicker');
+        const playlistElement = document.getElementById('playlist');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const nowPlayingText = document.getElementById('nowPlayingText');
+        
+        // Custom control buttons
+        const prevBtn = document.getElementById('prevBtn');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        let audioFiles = [];
+        let currentSongIndex = 0;
+        let currentObjectUrl = null; // NEW: Keeps track of the memory URL
+
+        // Listen for both file and folder selections
+        filePicker.addEventListener('change', handleFileSelection);
+        folderPicker.addEventListener('change', handleFileSelection);
+
+        function handleFileSelection(event) {
+            const files = Array.from(event.target.files);
+            
+            // Filter strictly for audio files (MP3, WAV, OGG, M4A, etc.)
+            const newAudioFiles = files.filter(file => file.type.startsWith('audio/'));
+
+            if (newAudioFiles.length === 0) {
+                alert("No audio files found in the selection.");
+                return;
+            }
+
+            // Append new files to the existing playlist
+            audioFiles = audioFiles.concat(newAudioFiles);
+            
+            renderPlaylist();
+
+            // If nothing is playing right now, start playing the first new song
+            if (audioPlayer.paused && audioFiles.length === newAudioFiles.length) {
+                playSong(0);
+            }
+            
+            // Reset input so the same files/folder can be selected again if needed
+            event.target.value = ""; 
+        }
+
+        function renderPlaylist() {
+            playlistElement.innerHTML = '';
+            
+            audioFiles.forEach((file, index) => {
+                const li = document.createElement('li');
+                li.innerText = file.name.replace(/\.[^/.]+$/, "");
+                
+                if (index === currentSongIndex) {
+                    li.classList.add('active');
+                }
+
+                li.onclick = () => playSong(index);
+                playlistElement.appendChild(li);
+            });
+        }
+
+        function playSong(index) {
+            if (index < 0 || index >= audioFiles.length) return;
+
+            currentSongIndex = index;
+            const file = audioFiles[index];
+
+            // 1. CRITICAL FIX: Free up memory from the previous song so WebView doesn't crash
+            if (currentObjectUrl) {
+                URL.revokeObjectURL(currentObjectUrl);
+            }
+
+            currentObjectUrl = URL.createObjectURL(file);
+            audioPlayer.src = currentObjectUrl;
+            
+            // 2. CRITICAL FIX: Explicitly tell Android to load the new file
+            audioPlayer.load(); 
+            
+            nowPlayingText.innerText = file.name.replace(/\.[^/.]+$/, "");
+
+            // 3. CRITICAL FIX: Add a tiny 150-millisecond delay to guarantee Android has loaded it before playing
+            setTimeout(() => {
+                let playPromise = audioPlayer.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(e => console.log("Auto-play prevented: ", e));
+                }
+            }, 150);
+
+            renderPlaylist(); // Update the active highlight
+        }
+
+        function playNext() {
+            if (audioFiles.length === 0) return;
+            let nextIndex = currentSongIndex + 1;
+            if (nextIndex >= audioFiles.length) {
+                nextIndex = 0; // Loop back to the first song
+            }
+            playSong(nextIndex);
+        }
+
+        function playPrevious() {
+            if (audioFiles.length === 0) return;
+            let prevIndex = currentSongIndex - 1;
+            if (prevIndex < 0) {
+                prevIndex = audioFiles.length - 1; // Loop to the last song
+            }
+            playSong(prevIndex);
+        }
+
+        function togglePlayPause() {
+            if (audioFiles.length === 0) return;
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+            } else {
+                audioPlayer.pause();
+            }
+        }
+
+        // Button Click Listeners
+        prevBtn.addEventListener('click', playPrevious);
+        nextBtn.addEventListener('click', playNext);
+        playPauseBtn.addEventListener('click', togglePlayPause);
+
+        // Sync the custom Play/Pause button with the actual audio state
+        audioPlayer.addEventListener('play', () => {
+            playPauseBtn.innerText = "⏸"; // Change to Pause icon
+        });
+
+        audioPlayer.addEventListener('pause', () => {
+            playPauseBtn.innerText = "▶"; // Change to Play icon
+        });
+
+        // Auto-play the next song when the current one finishes
+        audioPlayer.addEventListener('ended', playNext);
+    </script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+    <!-- Inline CSS inside body -->
+    <style>
+        /* Home button bottom-left */
+        .home-btn {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+        }
+
+        /* Refresh button bottom-right */
+        .refresh-btn {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            cursor: pointer;
+        }
+    </style>
+
+    <!-- Home button -->
+    <a href="tvtvnews.html" class="home-btn">
+        <img src="image/home.png" alt="Back To Home" width="50" height="50">
+    </a>
+
+    <!-- Refresh button -->
+    <img src="image/refresh.jpg" alt="Reload" id="refreshButton"
+         onclick="location.reload();" width="55" height="55" class="refresh-btn">

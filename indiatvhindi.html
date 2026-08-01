@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>India TV Live Player</title>
+<script>
+    // Tell the Android App to unlock the screen and allow rotation
+    if (typeof AndroidApp !== 'undefined' && typeof AndroidApp.unlockOrientation === 'function') {
+        AndroidApp.unlockOrientation();
+    }
+</script>
+<script>
+    // Disable right-click
+    document.addEventListener("contextmenu", function(event) {
+        event.preventDefault();
+    });
+
+    // Block Ctrl+U
+    document.addEventListener("keydown", function(event) {
+        if (event.ctrlKey && (event.key === 'u' || event.key === 'U')) {
+            event.preventDefault();
+            alert("Viewing source is disabled!");
+        }
+    });
+
+    // Function to enable sound
+    function enableSound() {
+        var iframe = document.getElementById("player");
+        var currentSrc = iframe.src;
+        
+        // Swap mute=1 to mute=0 in the URL parameters
+        if (currentSrc.includes('mute=1')) {
+            iframe.src = currentSrc.replace('mute=1', 'mute=0');
+        } else if (currentSrc.indexOf('mute=0') === -1) {
+            // Fallback if mute parameter is missing entirely
+            iframe.src = currentSrc + "&mute=0";
+        } else {
+            // Force reload if it's already set to mute=0
+            iframe.src = currentSrc;
+        }
+        
+        // Hide the button after it is clicked
+        document.getElementById("soundButton").style.display = "none";
+    }
+</script>
+
+<style>
+    body {
+        text-align: center;
+        background-color: black;
+        color: white;
+        margin: 0;
+        padding: 0;
+        overflow: hidden; 
+    }
+
+    .video-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100vw;
+        height: 100vh;
+        background: #000;
+    }
+
+    #vidcont {
+        width: 100%;
+        height: 100%;
+        position: relative;
+    }
+
+    /* Iframe styling for the third-party player */
+    #player {
+        width: 100%;
+        height: 100%;
+        max-width: 100%;
+        max-height: 100%;
+        border: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    /* Play Sound Button Styling */
+    .sound-btn {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #ff0000;
+        color: white;
+        border: 2px solid white;
+        padding: 10px 24px;
+        font-size: 18px;
+        font-weight: bold;
+        border-radius: 8px;
+        cursor: pointer;
+        z-index: 100;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.6);
+        transition: background-color 0.2s;
+    }
+
+    .sound-btn:active {
+        background-color: #cc0000;
+    }
+
+    /* Controls */
+    .home-btn {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      z-index: 10;
+    }
+
+    .refresh-btn {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    /* Fallback warning if they hold phone vertically on iOS */
+    #portrait-warning {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: black;
+        color: white;
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+        font-family: Arial, sans-serif;
+        font-size: 1.2rem;
+        text-align: center;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    @media screen and (orientation: portrait) {
+        #portrait-warning {
+            display: flex;
+        }
+        .video-container, .home-btn, .refresh-btn, .sound-btn {
+            display: none;
+        }
+    }
+</style>
+</head>
+<body>
+
+  <!-- iOS Fallback Warning -->
+  <div id="portrait-warning">
+      <div>
+        <p style="font-size: 50px; margin: 0 0 15px 0;">🔄</p>
+        Please rotate your device sideways.
+      </div>
+  </div>
+
+  <!-- Play Sound Button -->
+  <button id="soundButton" class="sound-btn" onclick="enableSound()">🔊 Play Sound</button>
+
+  <div class="video-container">
+      <div id="vidcont">
+          <!-- Iframe loads immediately. Mute MUST be set to 1 to allow mobile autoplay -->
+          <iframe id="player" 
+                  src="https://www.indiatvnews.com/iframe/playerlivetv?accountId=63bd2161756d5f000872bc0b&videoId=9ffbeb67a09d8_live&playerDivId=vidgyor&pip=0&piv=0&autoplay=1&mute=1&aspectRatio=16:9" 
+                  allow="autoplay; encrypted-media; fullscreen; picture-in-picture" 
+                  allowfullscreen>
+          </iframe>
+      </div>
+  </div>
+
+  <img src="image/refresh.jpg" alt="Reload" id="refreshButton"
+       onclick="location.reload();" width="70" height="70" class="refresh-btn">
+
+  <a href="tvtvnews.html" class="home-btn">
+    <img src="image/home.png" alt="Back To Home" width="65" height="65">
+  </a>
+
+</body>
+</html>

@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Responsive Retro JKRadio</title>
+    
+    <script>
+    document.addEventListener("contextmenu", function(event) {
+        event.preventDefault(); // Disable right-click
+    });
+
+    document.addEventListener("keydown", function(event) {
+        if (event.ctrlKey && (event.key === 'u' || event.key === 'U')) {
+            event.preventDefault(); // Block Ctrl + U
+            alert("Viewing source is disabled!");
+        }
+    });
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    
+    <script>
+        window.addEventListener("orientationchange", function() {
+            if (window.orientation === 0 || window.orientation === 180) {
+                alert("Please rotate your device to landscape mode for the best experience.");
+            }
+        });
+    </script>
+    
+    <style>
+        /* Your original styles */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            font-family: Arial, sans-serif;
+            background-color: #d4af37;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        /* Popup styles */
+        #popup {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #popup button {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        #mainContent {
+            display: none;
+        }
+
+        .radio {
+            width: 90vw;
+            height: 80vh;
+            background-color: black;
+            border-radius: 10vw;
+            border: 10px solid yellow; /* Red border */
+            padding: 4vw;
+            position: relative;
+            box-shadow: 0 0 2vw rgba(0,0,0,0.5);
+        }
+
+        .speaker {
+            width: 45vw;
+            height: 40vh;
+            background-color: #333;
+            background-image: radial-gradient(#666 1px, transparent 1px);
+            background-size: 5px 5px;
+            border: 5px solid #0E3F45;
+            border-radius: 20px;
+            position: absolute;
+            top: 10%;
+            z-index: 2;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .left-speaker { left: 6%; }
+
+        .tuning-panel {
+            width: 70%;
+            height: 8%;
+            background-color: #0E3F45; 
+            border-radius: 1vw;
+            border: 2px solid red; 
+            position: absolute;
+            top: 60%;
+            left: 14%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1vw;
+            color: white;
+            font-size: 1.5vw;
+            font-weight: bold;
+        }
+
+        .needle {
+            width: 3.0vw;
+            height: 10%;
+            background-color: red;
+            position: absolute;
+            top: 60%;
+            transition: left 0.5s ease-in-out;
+        }
+
+       .knob {
+            width: 10vw;
+            height: 10vw;
+            background: radial-gradient(circle, #aaa, #333);
+            border-radius: 50%;
+            border: 2px solid red;
+            cursor: grab;
+            position: absolute;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.6), 0 4px 8px rgba(0, 0, 0, 0.5);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+
+        .knob:active {
+            transform: scale(0.95);
+        }
+        .knob .knob-img {
+            width: 100%; 
+            height: 100%;
+            object-fit: cover; 
+            border-radius: 50%;
+        }
+        
+        #tuningKnob { bottom: 5%; left: 5%; }
+        #volumeKnob { bottom: 5%; right: 5%; }
+
+        h2 { font-size: 3vw; margin-top: 0; }
+        
+        audio { display: none; }
+
+        .styled-text {
+            font-family: "Great Vibes", cursive; 
+            font-size: 16px; 
+            color: whitesmoke; 
+            font-weight: 200; 
+            text-align: center; 
+            line-height: 1.6; 
+        }
+    
+        .button-container {
+            display: flex;
+            gap: 8px;
+            position: fixed;
+            top: 10%;
+            margin-bottom: 15px;
+            flex-direction: row; 
+        }
+        
+        .wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end; 
+        }
+        
+        button {
+            display: inline-block;
+            text-align: center;
+            vertical-align: middle;
+            padding: 2px 2px;
+            border: 1px solid white;
+            border-radius: 15px 50px;
+            background: #280505;
+            background: -webkit-gradient(linear, left top, left bottom, from(#280505), to(#b30e0e));
+            background: linear-gradient(to right, red, black, purple); 
+            cursor: pointer;
+            transition: transform 0.3s ease, background-color 0.3s ease;
+            -webkit-box-shadow: #0a0101 0px 0px 40px 0px;
+            -moz-box-shadow: #0a0101 0px 0px 40px 0px;
+            box-shadow: #0a0101 0px 0px 40px 0px;
+            text-shadow: #040101 1px 1px 1px;
+            font: normal normal bold 12px arial;
+            color: #ffffff;
+            text-decoration: none;
+        }   
+        
+        button:hover,
+        button:focus {
+            background: #300606;
+            background: -webkit-gradient(linear, left top, left bottom, from(#300606), to(#d71111));
+            background: -moz-linear-gradient(top, #300606, #d71111);
+            background: linear-gradient(to bottom, #300606, #d71111);
+            color: #ffffff;
+            text-decoration: none;
+        }
+        
+        button:active {
+            background: #080101;
+            background: -webkit-gradient(linear, left top, left bottom, from(#080101), to(#b30e0e));
+            background: -moz-linear-gradient(top, #080101, #b30e0e);
+            background: linear-gradient(to bottom, #080101, #b30e0e);
+        }
+        
+        button:before {
+            display: inline-block;
+            height: 15px;
+            width: 15px;
+            line-height: 15px;
+            margin: 0 3px -3px -3px;
+            position: relative;
+            top: 0px;
+            left: 0px;
+            background-size: 100% 100%;
+        }
+        
+        audio {
+            display: block;
+            width: 0%;
+            max-width: 0px;
+            margin-top: 0px;
+        }
+         
+        .volume-container {
+            width: 210px;
+            margin: 15px auto;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
+
+        label {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 10px;
+            background: linear-gradient(to right, red, black, purple);
+            border-radius: 5px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        #clock {
+            font-size: 20px;
+            font-weight: bold;
+            color: gold; 
+        }
+        
+        .portrait-warning {
+            display: none; 
+            font-size: 32px;
+            font-weight: bold;
+            color: red;
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            text-align: center; 
+        }
+        
+        .content {
+            display: block;
+        }
+        
+        @media screen and (orientation: portrait) {
+            .portrait-warning {
+                display: block; 
+            }
+            .content {
+                display: none;
+            }
+        }
+    </style>
+    
+    <script>
+        function updateClock() {
+            var now = new Date();
+            var hours = now.getHours().toString().padStart(2, '0');
+            var minutes = now.getMinutes().toString().padStart(2, '0');
+            var seconds = now.getSeconds().toString().padStart(2, '0');
+            document.getElementById('clock').innerText = hours + ":" + minutes + ":" + seconds;
+        }
+        setInterval(updateClock, 1000);
+    </script>
+    
+    <script>
+        document.addEventListener("click", () => {
+           let rp1 = document.getElementById("radioPlayer1");
+           if (rp1 && rp1.paused) {
+               rp1.muted = false;
+               rp1.play().catch(error => console.log("Playback failed:", error));
+           }
+        }, { once: true }); 
+    </script>
+
+    <script>
+        function checkOrientation() {
+            var warning = document.querySelector(".portrait-warning");
+            var content = document.querySelector(".content");
+            if (window.matchMedia("(orientation: portrait)").matches) {
+                if(warning) warning.style.display = "block";
+                if(content) content.style.display = "none";
+            } else {
+                if(warning) warning.style.display = "none";
+                if(content) content.style.display = "block";
+            }
+        }
+        window.addEventListener("resize", checkOrientation);
+        window.addEventListener("load", checkOrientation); 
+    </script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+</head>
+<body>
+<div id="popup">
+    <button id="startBtn">Start Radio + Keep Screen On</button>
+</div>
+
+<div id="mainContent">
+    <div class="portrait-warning">
+        Please switch on your landscape mode to view the page.
+    </div>
+    <div class="content">
+        <div class="radio">
+            <audio id="radioPlayer1" controls autoplay muted></audio>
+            <div class="speaker left-speaker"></div>
+            
+            <div class="wrapper">
+                <div class="button-container">
+                    <table border="0" style="text-align: right;">
+                        <tr>
+                            <th> <div id="clock">00:00:00</div></th>
+                            <th>.</th>
+                            <th>.</th>
+                        </tr>
+                        <tr>
+                            <td>. </td>
+                            <td>. </td>
+                            <td>. </td>
+                        </tr>
+                        <tr>
+                            <td><button onclick="playStation('https://air.pc.cdn.bitgravity.com/air/live/pbaudio001/playlist.m3u8')">106.4 FM</button></td>
+                            <td><button onclick="playStation('https://air.pc.cdn.bitgravity.com/air/live/pbaudio165/playlist.m3u8')">103.4 FM</button></td>
+                            <td><button onclick="playStation('https://feeds.intoday.in/aajtak/api/aajtakhd/master.m3u8')">100.0 FM</button></td>
+                        </tr>
+                        <tr>
+                            <td><button onclick="playStation('https://air.pc.cdn.bitgravity.com/air/live/pbaudio128/playlist.m3u8')">990 AM</button></td>
+                            <td><button onclick="playStation('https://playerservices.streamtheworld.com/api/livestream-redirect/NJS_HIN_ESTAAC.m3u8')">98.3 FM</button></td>
+                            <td><button onclick="playStation('https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio004/hlspbaudio00464kbps.m3u8')">107.1 FM</button></td>
+                        </tr>
+                        <tr>
+                            <td>.</td>
+                            <td>.</td>
+                            <td><button id="stopButton" onclick="stopStation()">STOP</button></td>
+                        </tr>
+                    </table>
+                    <audio id="radioPlayer2" controls></audio>
+                </div>
+            </div>
+            
+            <div class="tuning-panel">
+                 <span>90.0</span> <span>98.3</span> <span>99.0</span> <span>100.9</span> <span>103.4</span> <span>106.4</span> <span>107.1</span>
+             </div>
+            <div class="needle" id="needle"></div>
+
+            <div class="knob" id="tuningKnob">
+                <img src="image/tune.png" alt="Volume Knob" class="knob-img">
+            </div>
+             
+            <div class="knob" id="volumeKnob">
+                <img src="image/vol.png" alt="Vol" class="knob-img">
+            </div>
+        </div>
+        
+        <footer style="position: absolute; bottom: 0; width: 55%; display: flex; justify-content: center; align-items: center; gap: 15px; background-color: black; padding: 2px;left:20%;">
+            <!-- UPDATED HOME BUTTON -->
+            <a href="#" onclick="goHome(); return false;">
+                <img src="image/home.png" alt="Home" width="40" height="40">
+            </a>
+            
+            <h3 class="styled-text" style="margin: 0;">Jatinder Radio</h3>
+            <img src="image/refresh.jpg" alt="Reload Button" id="refreshButton" onclick="location.reload();" width="40" height="40">
+            <div class="volume-container">
+                <label for="volumeBar">Volume:</label>
+                <input type="range" id="volumeBar" min="0" max="1" step="0.01" value="0.5">
+            </div>
+        </footer>
+    </div>
+</div>
+
+<script>
+    // Keep screen awake
+    let wakeLock = null;
+
+    async function requestWakeLock() {
+        try {
+            wakeLock = await navigator.wakeLock.request('screen');
+            console.log("Wake Lock active");
+            wakeLock.addEventListener("release", () => console.log("Wake Lock released"));
+        } catch (err) {
+            console.error(`${err.name}, ${err.message}`);
+        }
+    }
+
+    // --- NEW: Force Landscape Function ---
+    async function lockLandscape() {
+        try {
+            // Must request full screen first for orientation lock to work
+            if (document.documentElement.requestFullscreen) {
+                await document.documentElement.requestFullscreen();
+            } else if (document.documentElement.webkitRequestFullscreen) { /* Safari */
+                await document.documentElement.webkitRequestFullscreen();
+            } else if (document.documentElement.msRequestFullscreen) { /* IE11 */
+                await document.documentElement.msRequestFullscreen();
+            }
+
+            // Lock orientation to landscape
+            if (screen.orientation && screen.orientation.lock) {
+                await screen.orientation.lock("landscape");
+            }
+        } catch (err) {
+            console.warn("Screen orientation lock failed: ", err);
+        }
+    }
+
+    // --- NEW: Go Home and Unlock Function ---
+    async function goHome() {
+        try {
+            // Unlock orientation
+            if (screen.orientation && screen.orientation.unlock) {
+                screen.orientation.unlock();
+            }
+            
+            // Exit full screen
+            if (document.exitFullscreen) {
+                await document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) { /* Safari */
+                await document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) { /* IE11 */
+                await document.msExitFullscreen();
+            }
+        } catch (err) {
+            console.warn("Exit full screen failed: ", err);
+        }
+        // Redirect to home page
+        window.location.href = "tvhome.html";
+    }
+
+    // Start button functionality
+    document.getElementById("startBtn").addEventListener("click", async () => {
+        requestWakeLock();
+        await lockLandscape(); // Calls the lock function
+        document.getElementById("popup").style.display = "none";
+        document.getElementById("mainContent").style.display = "block";
+    });
+</script>
+
+<script>
+    const stations = [
+        { frequency: 90.0, url: "", position: "15vw" },
+        { frequency: 98.3, url: "https://playerservices.streamtheworld.com/api/livestream-redirect/NJS_HIN_ESTAAC.m3u8", position: "25vw" },
+        { frequency: 99.0, url: "https://air.pc.cdn.bitgravity.com/air/live/pbaudio128/playlist.m3u8", position: "35vw" },
+        { frequency: 100.9, url: "https://feeds.intoday.in/aajtak/api/aajtakhd/master.m3u8", position: "45vw" },
+        { frequency: 103.4, url: "https://air.pc.cdn.bitgravity.com/air/live/pbaudio165/playlist.m3u8", position: "55vw" },
+        { frequency: 106.4, url: "https://air.pc.cdn.bitgravity.com/air/live/pbaudio001/playlist.m3u8", position: "70vw" },
+        { frequency: 107.1, url: "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio004/hlspbaudio00464kbps.m3u8", position: "80vw" }
+    ];
+
+    const radioPlayer1 = document.getElementById("radioPlayer1");
+    const tuningKnob = document.getElementById("tuningKnob");
+    const needle = document.getElementById("needle");
+    let angle = 0;
+    let stationIndex = 0;
+    let hls1 = null;
+
+    function tuneToStation(index) {
+        if (index >= 0 && index < stations.length) {
+            stationIndex = index;
+            radioPlayer1.muted = false;
+            
+            // Stop button player if knob is turned
+            let rp2 = document.getElementById("radioPlayer2");
+            if(rp2) rp2.pause();
+
+            let url = stations[stationIndex].url;
+
+            if (url) {
+                if (Hls.isSupported()) {
+                    if (hls1) { hls1.destroy(); }
+                    hls1 = new Hls();
+                    hls1.loadSource(url);
+                    hls1.attachMedia(radioPlayer1);
+                    hls1.on(Hls.Events.MANIFEST_PARSED, function() {
+                        radioPlayer1.play().catch(e => console.log(e));
+                    });
+                } else {
+                    radioPlayer1.src = url;
+                    radioPlayer1.play().catch(e => console.log(e));
+                }
+            } else {
+                radioPlayer1.pause();
+                if (hls1) { hls1.destroy(); hls1 = null; }
+                radioPlayer1.src = "";
+            }
+
+            needle.style.left = stations[stationIndex].position;
+        }
+    }
+
+    window.onload = function() {
+        let defaultStationIndex = stations.findIndex(station => station.frequency === 90.0);
+        if (defaultStationIndex !== -1) {
+            tuneToStation(defaultStationIndex);
+        }
+        checkOrientation(); 
+    };
+
+    // Handle mouse events for desktop
+    tuningKnob.addEventListener("mousedown", (event) => {
+        event.preventDefault();
+        document.addEventListener("mousemove", rotateTuningKnob);
+        document.addEventListener("mouseup", () => {
+            document.removeEventListener("mousemove", rotateTuningKnob);
+        }, {once: true});
+    });
+
+    // Handle touch events for mobile
+    tuningKnob.addEventListener("touchstart", (event) => {
+        event.preventDefault();
+        document.addEventListener("touchmove", rotateTuningKnob);
+        document.addEventListener("touchend", () => {
+            document.removeEventListener("touchmove", rotateTuningKnob);
+        }, {once: true});
+    });
+
+    function rotateTuningKnob(event) {
+        let movementX = 0;
+        if (event.touches) {
+            movementX = event.touches[0].clientX - event.touches[0].target.getBoundingClientRect().left;
+        } else {
+            movementX = event.movementX; 
+        }
+
+        angle += movementX;
+        tuningKnob.style.transform = `rotate(${angle}deg)`;
+
+        const newIndex = Math.abs(Math.floor(angle / 40) % stations.length);
+        if (newIndex !== stationIndex) {
+            tuneToStation(newIndex);
+        }
+    }
+
+    // Volume Knob configuration
+    const volumeKnob = document.getElementById("volumeKnob");
+    const radioPlayer2 = document.getElementById("radioPlayer2");
+    let volumeAngle = 0;
+
+    function adjustVolumeRotation(event) {
+        let movementX = event.touches ? 
+            (event.touches[0].clientX - event.touches[0].target.getBoundingClientRect().left) : 
+            event.movementX;
+
+        volumeAngle -= movementX; // Reverse movement direction
+        volumeKnob.style.transform = `rotate(${volumeAngle}deg)`;
+        
+        let volume = Math.min(Math.max((volumeAngle % 270) / 270, 0.2), 1); 
+
+        let activePlayer = !radioPlayer2.paused ? radioPlayer2 : radioPlayer1;
+        if (activePlayer) {
+            activePlayer.volume = Math.abs(volume);
+        }
+    }
+
+    function startAdjustingVolume(event) {
+        event.preventDefault();
+        let moveEvent = event.type.includes("touch") ? "touchmove" : "mousemove";
+        let endEvent = event.type.includes("touch") ? "touchend" : "mouseup";
+        
+        document.addEventListener(moveEvent, adjustVolumeRotation);
+        document.addEventListener(endEvent, () => {
+            document.removeEventListener(moveEvent, adjustVolumeRotation);
+        }, {once: true});
+    }
+
+    volumeKnob.addEventListener("mousedown", startAdjustingVolume);
+    volumeKnob.addEventListener("touchstart", startAdjustingVolume);
+</script>
+
+<script>
+    let hls2 = null;
+    function playStation(streamUrl) {
+        var player = document.getElementById("radioPlayer2");
+        var player1 = document.getElementById("radioPlayer1");
+        
+        // Stop the knob radio when a button is clicked
+        if (player1) player1.pause();
+
+        if (Hls.isSupported()) {
+            if (hls2) hls2.destroy();
+            hls2 = new Hls();
+            hls2.loadSource(streamUrl);
+            hls2.attachMedia(player);
+            hls2.on(Hls.Events.MANIFEST_PARSED, function() {
+                player.play().catch(e => console.log(e));
+            });
+        } else if (player.canPlayType('application/vnd.apple.mpegurl')) {
+            player.src = streamUrl;
+            player.play().catch(e => console.log(e));
+        } else {
+            alert("HLS playback is not supported in this browser.");
+        }
+    }
+
+    function stopStation() {
+        var player1 = document.getElementById("radioPlayer1");
+        var player2 = document.getElementById("radioPlayer2");
+
+        if (player1) {
+            player1.pause();
+            player1.src = "";
+        }
+
+        if (player2) {
+            player2.pause();
+            player2.src = "";
+        }
+    }
+</script>
+    
+<script>
+    document.getElementById('volumeBar').addEventListener('input', function() {
+        var volume = this.value;
+        document.getElementById('radioPlayer1').volume = volume;
+        document.getElementById('radioPlayer2').volume = volume;
+    });
+</script>
+</body>
+</html>

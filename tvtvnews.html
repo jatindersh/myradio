@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation Table</title>
+    
+   <script>
+    // Tell the Android App to strictly lock into portrait mode
+    if (typeof AndroidApp !== 'undefined' && typeof AndroidApp.lockPortrait === 'function') {
+        AndroidApp.lockPortrait();
+    }
+</script>
+    <!-- Security & Orientation Scripts -->
+    <script>
+        document.addEventListener("contextmenu", function(event) {
+            event.preventDefault(); // Disable right-click
+        });
+
+        document.addEventListener("keydown", function(event) {
+            if (event.ctrlKey && (event.key === 'u' || event.key === 'U')) {
+                event.preventDefault(); // Block Ctrl + U
+                alert("Viewing source is disabled!");
+            }
+        });
+
+        // Attempt to lock screen orientation to portrait via JS API
+        window.addEventListener("load", function() {
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('portrait').catch(function(error) {
+                    console.log("Screen orientation lock failed or not supported: ", error);
+                });
+            }
+        });
+    </script>
+
+    
+    <link rel="stylesheet" href="./css/button.css">
+    <link rel="shortcut icon" href="image/jkpic2.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- ADDED: Flexbox Centering for the Body --- */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background-color: black;
+            color: white;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            
+            /* These 4 lines force everything to the absolute middle */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 420px; /* Prevents stretching too wide on tablets */
+            text-align: center;
+            padding-bottom: 80px; /* Safe space so table doesn't hide behind footer */
+        }
+
+        h2 {
+            text-align: center;
+            color: white;
+            margin-top: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            border: 2px solid rgb(78, 78, 115);
+            background-color: #0a0000;
+            table-layout: fixed;
+        }
+
+        td {
+            padding: 10px;
+            text-align: center;
+            width: 50%;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            border: 1px solid gold;
+            border-radius: 15px;
+            background: linear-gradient(45deg, black, purple);
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            width: 90%; 
+        }
+
+        .btn:hover {
+            transform: scale(1.1);
+        }
+
+        td a {
+            text-decoration: none;
+        }
+
+        /* --- UPDATED: Sits correctly inside the flex footer --- */
+        .styled-text {
+            font-family: "Great Vibes", cursive;
+            font-size: 24px;
+            color: whitesmoke;
+            font-weight: 300;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        /* --- UPDATED: Fixed to bottom of screen --- */
+        .footer-controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            display: flex; 
+            justify-content: space-between; /* Spreads the 3 elements nicely */
+            align-items: center;  
+            padding: 10px 30px; /* Safe padding from edges */
+            background-color: #050505; /* Matches background */
+            border-top: 1px solid #222; /* Clean separator line */
+            box-sizing: border-box;
+            z-index: 1000;
+            padding-bottom: env(safe-area-inset-bottom, 15px); /* iPhone safe area */
+        }
+
+        .refresh-btn, .home-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            outline: none;
+        }
+
+        .home-img, .refresh-img {
+            transition: transform 0.5s ease;
+            filter: drop-shadow(0 2px 8px #222);
+        }
+        .home-img { width: 55px; height: 55px; }
+        .refresh-img { width: 65px; height: 65px; }
+
+        @keyframes spin {
+            from { transform: rotate(0deg);}
+            to { transform: rotate(360deg);}
+        }
+        
+        .refresh-btn:hover .refresh-img,
+        .home-btn:hover .home-img,
+        .spin-active {
+            animation: spin 1s infinite linear !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Live Channels</h2>
+        
+        <table> 
+            <tr>
+                <td><a href="zeenewshindi.html"><button class="btn">Zee TV</button></a></td>
+                <td><a href="aajtakhd.html"><button class="btn">AAjTak</button></a></td>
+            </tr>
+            <tr>
+                <td><a href="ndtvhindi.html"><button class="btn">NDTV</button></a></td>
+                <td><a href="RbharatHindi.html"><button class="btn">R-Bharat</button></a></td>
+            </tr>
+            <tr>
+                <td><a href="abpnewshindi.html"><button class="btn">ABP</button></a></td>
+                <td><a href="tvtv9.html"><button class="btn">TV9</button></a></td>
+            </tr>
+            <tr>
+                <td><a href="news24Hindi.html"><button class="btn">News24</button></a></td>
+                <td><a href="indiatvhindi.html"><button class="btn">India TV</button></a></td> 
+            </tr>   
+        </table>
+    </div>
+
+    <!-- Fixed Footer Container -->
+    <div class="footer-controls">
+        <button class="refresh-btn" id="refreshBtn" aria-label="Refresh page">
+            <img src="image/refresh.jpg" alt="Refresh" class="refresh-img">
+        </button>
+        
+        <div class="styled-text">Jatinder</div>
+
+        <button class="home-btn" id="rhomeBtn" aria-label="home page">
+            <img src="image/home.png" alt="Home" class="home-img">
+        </button>
+    </div>
+
+    <script>
+        document.getElementById('refreshBtn').addEventListener('click', function() {
+            this.querySelector('.refresh-img').style.animation = 'spin 1s linear infinite';
+            setTimeout(() => { window.location.reload(); }, 500);
+        });
+
+        document.getElementById('rhomeBtn').addEventListener('click', function() {
+            var homeImg = this.querySelector('.home-img');
+            if (homeImg) homeImg.style.animation = 'spin 1s linear infinite'; 
+            setTimeout(() => { window.location.href = "tvhome.html"; }, 500);
+        });
+    </script>
+  
+    <!-- --- JavaScript for Touch & Click Animations --- -->
+    <script>
+        function setupSpinButton(buttonId, imgClass, actionCallback) {
+            var btn = document.getElementById(buttonId);
+            if (!btn) return;
+
+            ['click', 'touchstart'].forEach(function(eventType) {
+                btn.addEventListener(eventType, function(e) {
+                    e.preventDefault(); 
+                    
+                    var img = btn.querySelector('.' + imgClass);
+                    if (img) {
+                        img.classList.add('spin-active');
+                        img.style.animation = 'spin 1s linear infinite'; 
+                    }
+
+                    setTimeout(() => {
+                        actionCallback();
+                    }, 500);
+                }, { passive: false });
+            });
+        }
+
+        setupSpinButton('refreshBtn', 'refresh-img', function() {
+            window.location.reload();
+        });
+
+        setupSpinButton('rhomeBtn', 'home-img', function() {
+            window.location.href = "index.html";
+        });
+    </script>
+</body>
+</html>

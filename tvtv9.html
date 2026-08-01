@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TV9 Hindi News</title>
+<script>
+    // Tell the Android App to unlock the screen and allow rotation
+    if (typeof AndroidApp !== 'undefined' && typeof AndroidApp.unlockOrientation === 'function') {
+        AndroidApp.unlockOrientation();
+    }
+</script>
+<script>
+    // Disable right-click
+    document.addEventListener("contextmenu", function(event) {
+        event.preventDefault();
+    });
+
+    // Block Ctrl+U
+    document.addEventListener("keydown", function(event) {
+        if (event.ctrlKey && (event.key === 'u' || event.key === 'U')) {
+            event.preventDefault();
+            alert("Viewing source is disabled!");
+        }
+    });
+</script>
+
+<style>
+    body {
+        text-align: center;
+        background-color: black;
+        color: white;
+        margin: 0;
+        padding: 0;
+        overflow: hidden; 
+    }
+
+    .video-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100vw;
+        height: 100vh;
+        background: #000;
+    }
+
+    /* Iframe Styling */
+    #player {
+        width: 100%;
+        height: 100%;
+        max-width: 100%;
+        max-height: 100%;
+        border: none;
+        outline: none;
+        background: black;
+    }
+
+    /* Clean Unmute Overlay */
+    #unmute-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 10000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.4); /* Slight darkening so the text pops */
+        color: white;
+        font-family: Arial, sans-serif;
+        font-size: 22px;
+        font-weight: bold;
+        cursor: pointer;
+        backdrop-filter: blur(2px);
+    }
+
+    .unmute-box {
+        background: rgba(255, 0, 0, 0.8);
+        padding: 15px 30px;
+        border-radius: 50px;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    .home-btn {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      z-index: 10;
+    }
+
+    .refresh-btn {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    /* Fallback warning if they hold phone vertically on iOS */
+    #portrait-warning {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: black;
+        color: white;
+        z-index: 99999;
+        justify-content: center;
+        align-items: center;
+        font-family: Arial, sans-serif;
+        font-size: 1.2rem;
+        text-align: center;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    @media screen and (orientation: portrait) {
+        #portrait-warning { display: flex; }
+        .video-container, .home-btn, .refresh-btn, #unmute-overlay { display: none; }
+    }
+</style>
+</head>
+<body>
+
+  <!-- iOS Fallback Warning -->
+  <div id="portrait-warning">
+      <div>
+        <p style="font-size: 50px; margin: 0 0 15px 0;">🔄</p>
+        Please rotate your device sideways.
+      </div>
+  </div>
+
+  <!-- Sleek Tap-to-Unmute Screen -->
+  <div id="unmute-overlay">
+      <div class="unmute-box">Tap anywhere for sound & fullscreen 🔊</div>
+  </div>
+
+  <div class="video-container">
+    <!-- TV9 Hindi iframe loaded immediately with autoplay parameters added -->
+    <iframe id="player" 
+            src="https://static.vidgyor.com/player/account/tv9/html/tv9_v12.html?videoId=aca8e80cceddb_live&accountId=62bafd8513ddad0009e72496&autoplay=1&muted=1" 
+            allow="autoplay; encrypted-media; fullscreen" 
+            allowfullscreen>
+    </iframe>
+  </div>
+
+  <img src="image/refresh.jpg" alt="Reload" id="refreshButton" onclick="location.reload();" width="70" height="70" class="refresh-btn">
+  
+  <a href="tvtvnews.html" class="home-btn">
+    <img src="image/home.png" alt="Back To Home" width="65" height="65">
+  </a>
+
+  <script>
+    // Fullscreen Logic: Waits for the user's first tap anywhere on the screen
+    document.getElementById('unmute-overlay').addEventListener('click', function() {
+        
+        // Hide the overlay forever
+        this.style.display = 'none';
+
+        // Force Fullscreen on that first tap to make it feel like a native app
+        let docElm = document.documentElement;
+        if (docElm.requestFullscreen) { 
+            docElm.requestFullscreen(); 
+        } else if (docElm.webkitRequestFullscreen) { 
+            docElm.webkitRequestFullscreen(); 
+        }
+
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock("landscape").catch(e => console.log(e));
+        }
+    });
+  </script>
+</body>
+</html>

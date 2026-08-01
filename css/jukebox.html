@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classic Jukebox Audio Player</title>
+ 	<link rel="shortcut icon" href="image/jkpic2.png" type="image/png"> 
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.2.2/hls.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            background-color: black;
+            color: white;
+            padding: 20px;
+        }
+        .button {
+            padding: 10px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            background-color: #ffcc00;
+            color: black;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+        .button:hover {
+            background-color: #ff9900;
+        }
+        .jukebox {
+            border: 4px solid #ffcc00;
+            padding: 20px;
+            display: inline-block;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .volume-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .volume-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 60%;
+            height: 8px;
+            background: #ffcc00;
+            border-radius: 5px;
+            outline: none;
+            cursor: pointer;
+        }
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #ff9900;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+		 .button2 {
+  background: linear-gradient(to right, red, black, purple);
+  color: white; /* Text color */
+  border: none; /* Remove border */
+  border-radius: 8px; /* Rounded corners */
+  padding: 10px 20px; /* Padding around the text */
+  font-size: 16px; /* Font size */
+  cursor: pointer; /* Pointer cursor on hover */
+  transition: transform 0.2s; /* Smooth animation */
+}
+
+.button2:hover {
+  transform: scale(1.1); /* Slight zoom on hover */
+}
+
+.button2:active {
+  transform: scsale(0.95); /* Slightly shrink when clicked */
+}
+      
+    </style>
+</head>
+<body>
+<marquee behavior="scroll" direction="left">
+  Radio Stream depends upon Internet speed
+</marquee>
+    <h1>Internet Jukebox Audio Player</h1>
+	 
+    
+    <div class="jukebox">
+        <p id="stationName">Station 1: Zeno FM</p>
+        <button id="prev" class="button">⏮ Previous</button>
+        <button id="play" class="button">▶ Play</button>
+        <button id="pause" class="button">⏸ Pause</button>
+        <button id="next" class="button">⏭ Next</button>
+        <button id="volumeMute" class="button">🔇 Mute</button>
+        <button id="volumeUnmute" class="button" style="display: none;">🔊 Unmute</button>
+        
+        <div class="volume-container">
+            <span>🔊</span>
+            <input type="range" id="volume_value" class="volume-slider" min="0" max="1" step="0.1" value="0.5">
+        </div>
+    </div>
+
+    <audio id="audioPlayer" preload="auto"></audio>
+	<br>
+    <button class="button2" onclick="window.location.href='index.html'">Home</button>
+
+    <script>
+        var playlist = [
+			{ name: "Kishore Kumar Ji", url: "https://stream.zeno.fm/0ghtfp8ztm0uv" },
+			{ name: "Mohd. Rafi Radio", url: "https://stream.zeno.fm/2xx62x8ztm0uv" },
+            { name: "Zeno FM", url: "https://stream.zeno.fm/dbstwo3dvhhtv" },
+            { name: "Radio Paradise", url: "https://stream.radioparadise.com/mp3-192" },
+            { name: "Vividh Bharti", url: "https://air.pc.cdn.bitgravity.com/air/live/pbaudio001/playlist.m3u8" },
+			 
+			
+			{ name: "Gurbani Kirtan", url: "https://gurbanikirtan.radioca.st/start.mp3" },
+			{ name: "All India Radio AIR Jaipur", url: "https://air.pc.cdn.bitgravity.com/air/live/pbaudio192/playlist.m3u8" },
+			{ name: "Air FM Gold", url: "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio005/hlspbaudio005_Auto.m3u8" },
+			{ name: "Air Malayalam", url: "https://air.pc.cdn.bitgravity.com/air/live/pbaudio230/playlist.m3u8" },
+			{ name: "All India Radio Air Tamil", url: "https://air.pc.cdn.bitgravity.com/air/live/pbaudio025/playlist.m3u8" },
+			{ name: "Radio Hungama", url: "https://server.mixify.in:8010/radio.mp3?type=http&amp;nocache=15412/;stream/1" },
+			{ name: "AIR Delhi Indraprastha", url: "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio006/hlspbaudio006_Auto.m3u8" },
+			{ name: "AIR Punjabi", url: "https://air.pc.cdn.bitgravity.com/air/live/pbaudio138/playlist.m3u8" },
+			{ name: "AIR Shimla H.P", url: "https://air.pc.cdn.bitgravity.com/air/live/pbaudio042/playlist.m3u8" },
+			{ name: "Radio City", url: "https://stream.zeno.fm/pxc55r5uyc9uv" },
+			{ name: "Akashwani DharamShala", url: "https://air.pc.cdn.bitgravity.com/air/live/pbaudio165/playlist.m3u8" },
+			{ name: "F.M. Rainbow", url: "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio004/hlspbaudio00464kbps.m3u8" },
+			{ name: "Empty", url: "..." },
+
+            { name: "Radio Mirchi", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/NJS_HIN_ESTAAC.m3u8" }
+        ];
+
+        var currentTrack = 0;
+        var aud = document.getElementById("audioPlayer");
+        var stationName = document.getElementById("stationName");
+
+        function loadTrack(trackIndex) {
+            var FILE = playlist[trackIndex].url;
+            stationName.innerHTML = "Now Playing: " + playlist[trackIndex].name;
+
+            if (FILE.includes("m3u8") && Hls.isSupported()) {
+                var hls = new Hls();
+                hls.loadSource(FILE);
+                hls.attachMedia(aud);
+            } else {
+                aud.src = FILE;
+            }
+        }
+
+        document.getElementById("play").addEventListener("click", function() {
+            aud.play();
+        });
+
+        document.getElementById("pause").addEventListener("click", function() {
+            aud.pause();
+        });
+
+        document.getElementById("prev").addEventListener("click", function() {
+            currentTrack = (currentTrack > 0) ? currentTrack - 1 : playlist.length - 1;
+            loadTrack(currentTrack);
+            aud.play();
+        });
+
+        document.getElementById("next").addEventListener("click", function() {
+            currentTrack = (currentTrack < playlist.length - 1) ? currentTrack + 1 : 0;
+            loadTrack(currentTrack);
+            aud.play();
+        });
+
+        document.getElementById("volumeMute").addEventListener("click", function() {
+            aud.muted = true;
+            document.getElementById("volumeMute").style.display = "none";
+            document.getElementById("volumeUnmute").style.display = "inline-block";
+        });
+
+        document.getElementById("volumeUnmute").addEventListener("click", function() {
+            aud.muted = false;
+            document.getElementById("volumeUnmute").style.display = "none";
+            document.getElementById("volumeMute").style.display = "inline-block";
+        });
+
+        document.getElementById("volume_value").addEventListener("input", function(e) {
+            aud.volume = e.target.value;
+        });
+
+        // Load the first track when the page loads
+        loadTrack(currentTrack);
+    </script>
+
+</body>
+</html>

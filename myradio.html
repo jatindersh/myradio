@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <meta name="screen-orientation" content="portrait">
+    <meta name="x5-orientation" content="portrait">
+    
+    <title>JKRadio Audio Player</title>
+    
+    <script>
+    document.addEventListener("contextmenu", function(event) { event.preventDefault(); });
+    document.addEventListener("keydown", function(event) {
+        if (event.ctrlKey && (event.key === 'u' || event.key === 'U')) {
+            event.preventDefault(); 
+            alert("Viewing source is disabled!");
+        }
+    });
+
+    // Portrait Lock
+    window.addEventListener("load", function() {
+        if (typeof AndroidApp !== 'undefined' && typeof AndroidApp.lockPortrait === 'function') {
+            AndroidApp.lockPortrait();
+        }
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('portrait').catch(function(error) {});
+        }
+    });
+    </script>
+    
+    <link rel="stylesheet" href="css/button.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+    <!-- Removed useless jQuery Marquee dependencies to save CPU -->
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: white;
+            margin: 0;
+            padding: 15px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            
+            /* --- PREVENTS TEXT SELECTION ANYWHERE ON SCREEN --- */
+            -webkit-user-select: none; /* Chrome, Safari, Android */
+            -moz-user-select: none;    /* Firefox */
+            -ms-user-select: none;     /* IE/Edge */
+            user-select: none;         /* Standard syntax */
+        }
+
+        .rcorners4 {
+            width: 100%;
+            max-width: 420px;
+            padding: 30px 15px;
+            border-radius: 5px 70px 5px 70px;
+            border: 2px solid grey;
+            background-color: #000;
+            text-align: center;
+        }
+
+        h2 { margin-top: 0; }
+
+        .now-playing {
+            color: #FFD700;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            word-wrap: break-word;
+            padding: 0 10px;
+        }
+
+        .track-counter {
+            color: #aaaaaa;
+            font-size: 14px;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 15px 0;
+            gap: 10px; 
+        }
+
+        .btn {
+            padding: 10px 15px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            border: 2px solid gold;
+            border-radius: 15px;
+            background: linear-gradient(45deg, black, purple);
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .btn:hover { transform: scale(1.05); }
+
+        .play-btn {
+            font-size: 20px;
+            padding: 10px 20px;
+        }
+
+        .slider {
+            width: 80%;
+            margin: 10px auto 20px;
+            display: block;
+        }
+
+        .styled-text {
+            font-family: "Great Vibes", cursive;
+            font-size: 20px;
+            color: whitesmoke;
+            font-weight: 300;
+            text-align: center;
+        }
+
+        .progress-container {
+            width: 80%;
+            height: 25px; 
+            background: white;
+            position: relative;
+            margin: 10px auto 20px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #FFD700, #FFD700); 
+            transition: width 0.1s linear;
+            position: relative;
+        }
+
+        .progress-label {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            color: #000; 
+            font-weight: bold;
+            z-index: 2;
+        }
+
+        @media (max-width: 600px) {
+            .progress-container { width: 90%; height: 20px; }
+            .progress-label { font-size: 12px; }
+            .slider { width: 90%; }
+            .btn { font-size: 14px; padding: 8px 10px; }
+        } 
+
+        .footer-controls {
+            display: flex; 
+            justify-content: center; 
+            align-items: center;  
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .refresh-btn, .home-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .home-img, .refresh-img {
+            transition: transform 0.5s ease;
+            filter: drop-shadow(0 2px 8px #222);
+        }
+        .home-img { width: 55px; height: 55px; }
+        .refresh-img { width: 65px; height: 65px; }
+
+        @keyframes spin {
+            from { transform: rotate(0deg);}
+            to { transform: rotate(360deg);}
+        }
+        
+        .refresh-btn:hover .refresh-img,
+        .home-btn:hover .home-img {
+            animation: spin 1.5s infinite linear;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="rcorners4">
+        
+        <h2>Listen to Melody_Tunes</h2>
+        
+        <span class="track-counter" id="trackCounter">Loading Playlist...</span>
+        <div class="now-playing" id="nowPlayingText">Please Wait...</div>
+         
+        <audio id="myAudio"></audio>
+
+        <div style="display: flex; align-items: center; justify-content: center;">
+            <label for="seekBar" style="display: flex; align-items: center; gap: 5px; font-size: 20px;">
+                TuneTrack <img src="image/downf.png" alt="Icon" style="width: 20px; height: 20px;">
+            </label>
+        </div>
+        <input type="range" id="seekBar" class="slider" min="0" max="100" value="0">
+             
+        <div style="display: flex; align-items: center; justify-content: center;">
+            <label for="volumeBar" style="display: flex; align-items: center; gap: 5px; font-size: 20px;">
+                Volume Control <img src="image/downf.png" alt="Icon" style="width: 20px; height: 20px;">
+            </label>
+        </div>
+        <img src="image/volume.png" width="30" height="30" alt="VOL">
+        <input type="range" id="volumeBar" class="slider" min="0" max="1" step="0.01" value="1">
+            
+        <div style="display: flex; align-items: center; justify-content: center;">
+            <label for="progressBar" style="display: flex; align-items: center; gap: 5px; font-size: 20px;">
+                Progress Bar <img src="image/downf.png" alt="Icon" style="width: 20px; height: 20px;">
+            </label>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+            <span class="progress-label" id="progressLabel">0%</span>
+        </div>
+         
+        <div class="container">
+            <button class="btn" onclick="prevTrack()">⏮ Prev</button>
+            <button class="btn play-btn" id="playBtn" onclick="toggleAudio()">        
+                <img src="image/playbl.png" id="playIcon" alt="play" width="30" height="30">
+                <span id="playText">Play</span>
+            </button>
+            <button class="btn" onclick="nextTrack()">Next ⏭</button>
+        </div>
+
+        <div class="footer-controls">
+             <button class="refresh-btn" id="refreshBtn" aria-label="Refresh page">
+                <img src="image/refresh.jpg" alt="Refresh" class="refresh-img">
+            </button>
+             <div class="styled-text">&ensp;&ensp; Jatinder&ensp;&ensp;</div>
+
+            <button class="home-btn" id="rhomeBtn" aria-label="home page">
+                <img src="image/home.png" alt="Home" class="home-img">
+            </button>
+         </div>
+        
+    </div>
+
+<script>
+    const playlist = [
+        { title: "Melody Tunes DJ", url: "https://www.dropbox.com/scl/fi/ikeqpatkttb2yyl9r8jei/MelodyTunes.mp3?rlkey=vt3myempr8y64r44jg67dg4g1&st&raw=1&raw=1" },
+        { title: "Melody Songs", url: "https://www.dropbox.com/scl/fi/zndkuvq4to04tg2hiyljp/Melody-Songs.mp3?rlkey=9y29ddwrhk78qsz54bm8nmqwn&raw=1" },
+        { title: "Old is Gold Hits", url: "https://www.dropbox.com/scl/fi/lob4gbci342nddfbr70om/Old-is-God-Hits.mp3?rlkey=icba29lfqul6c4rzvmgtip3sa&raw=1" },
+        { title: "Kishore by Abhijeet", url: "https://www.dropbox.com/scl/fi/wpv4oar6j5conlf9194kg/Kishore-by-Abhijeet.mp3?rlkey=7j9n202rhtyzo9uj08gthu3fd&raw=1" },
+        { title: "Kishore Kumar Hits", url: "https://www.dropbox.com/scl/fi/tl1x18shnwm3x7b2n24u3/Kishore-Kumar-HIts.mp3?rlkey=lmyetlo3xbpfhs5alq6gr4a6i&raw=1" },
+        { title: "Madan Mohan Hits", url: "https://www.dropbox.com/scl/fi/7d3aaebnrhll7p5q497mj/Madan-Mohan-Hits.mp3?rlkey=k6lacg09djlx2dv9jm4chl0au&raw=1" },
+        { title: "Manna Dey", url: "https://www.dropbox.com/scl/fi/gb6up9gm908t502hmuvqs/manaday.mp3?rlkey=ocfok8iu1rwu76q5fe1xtqalm&raw=1" },
+        { title: "OP Nayar", url: "https://www.dropbox.com/scl/fi/xdimumcak2feilzm9j4o5/OP.Nayar.mp3?rlkey=6oamdcf7981f19bj6667gaz9s&raw=1" },
+        { title: "Rafi Sahab Songs", url: "https://www.dropbox.com/scl/fi/8e63ifqugtaw6uyaxgxkz/Rafi-Sahab-Songs.mp3?rlkey=svdv45t5getbhmcgwrj8gd9by&raw=1" },
+        { title: "Yesudas", url: "https://www.dropbox.com/scl/fi/iqlt9zr3qx3jbtfz8ggxm/yasudas-1.mp3?rlkey=2nnlxsivkopl8908ltl4c1e5n&raw=1" }
+    ];
+
+    let currentTrackIndex = 0;
+    let audio = document.getElementById("myAudio");
+    let seekBar = document.getElementById("seekBar");
+    let volumeBar = document.getElementById("volumeBar");
+    let progressBar = document.getElementById("progressBar");
+    let progressLabel = document.getElementById("progressLabel");
+    let nowPlayingText = document.getElementById("nowPlayingText");
+    let trackCounter = document.getElementById("trackCounter");
+    let playText = document.getElementById("playText");
+    
+    function setupMediaSession(trackIndex) {
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: playlist[trackIndex].title,
+                artist: 'Melody Tunes',
+                album: 'JKRadio Playlist'
+            });
+
+            navigator.mediaSession.setActionHandler('play', () => { audio.play(); playText.innerText = "Pause"; });
+            navigator.mediaSession.setActionHandler('pause', () => { audio.pause(); playText.innerText = "Play"; });
+            navigator.mediaSession.setActionHandler('previoustrack', () => { prevTrack(); });
+            navigator.mediaSession.setActionHandler('nexttrack', () => { nextTrack(); });
+        }
+    }
+
+    function loadTrack(index) {
+        audio.src = playlist[index].url;
+        nowPlayingText.innerText = "🎵 " + playlist[index].title;
+        trackCounter.innerText = `Track ${index + 1} of ${playlist.length}`;
+        audio.load();
+        setupMediaSession(index);
+    }
+
+    function toggleAudio() {
+        if (audio.paused) {
+            audio.play();
+            playText.innerText = "Pause";
+        } else {
+            audio.pause();
+            playText.innerText = "Play";
+        }
+    }
+
+    function nextTrack() {
+        currentTrackIndex++;
+        if (currentTrackIndex >= playlist.length) currentTrackIndex = 0;
+        loadTrack(currentTrackIndex);
+        audio.play();
+        playText.innerText = "Pause";
+    }
+
+    function prevTrack() {
+        currentTrackIndex--;
+        if (currentTrackIndex < 0) currentTrackIndex = playlist.length - 1;
+        loadTrack(currentTrackIndex);
+        audio.play();
+        playText.innerText = "Pause";
+    }
+
+    audio.addEventListener('ended', nextTrack);
+
+    audio.addEventListener('error', function(e) {
+        nowPlayingText.innerText = "⚠️ Connection Error. Skipping...";
+        setTimeout(nextTrack, 2000);
+    });
+
+    window.onload = function() {
+        loadTrack(currentTrackIndex);
+    };
+
+    audio.addEventListener("timeupdate", function() {
+        if (!isNaN(audio.duration) && audio.duration > 0) {
+            let progress = (audio.currentTime / audio.duration) * 100;
+            seekBar.value = progress;
+            progressBar.style.width = `${progress}%`;
+            progressLabel.innerText = `${Math.round(progress)}%`;
+        }
+    });
+
+    seekBar.addEventListener("input", function() {
+        if (!isNaN(audio.duration) && audio.duration > 0) {
+            audio.currentTime = (seekBar.value / 100) * audio.duration;
+        }
+    });
+
+    volumeBar.addEventListener("input", function() { audio.volume = volumeBar.value; });
+
+    document.getElementById('refreshBtn').addEventListener('click', function() {
+        this.querySelector('.refresh-img').style.animation = 'spin 1s linear infinite';
+        setTimeout(() => { window.location.reload(); }, 500);
+    });
+
+    document.getElementById('rhomeBtn').addEventListener('click', function() {
+        var homeImg = this.querySelector('.home-img');
+        if (homeImg) homeImg.style.animation = 'spin 1s linear infinite'; 
+        setTimeout(() => { window.location.href = "tvhome.html"; }, 500);
+    });
+</script>
+</body>
+</html>

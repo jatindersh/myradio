@@ -1,0 +1,261 @@
+		* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+			justify-content: center; /* Horizontally centers content */
+            align-items: center; /* Vertically centers content */
+            margin: 0; /* Removes default margin */
+             font-family: Arial, sans-serif;
+            background-color: black;
+            color: white;
+			user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        .container {
+            max-width: 768px;
+            margin: 0 auto;
+            padding: 15px;
+			align-self: center;
+        }
+       .box {
+            border-radius: 10px 70px;
+			background-color: black;
+ 	 		font-family: Arial, sans-serif;
+            margin-top: 0;
+            color: whitesmokes;
+			padding: 1px;
+            box-sizing: border-box;
+		}
+         .custom-table {
+            width: 98%;
+            margin-left: 5px;
+            margin-right: 5px;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 10px;
+            border-radius: 10px 70px;
+            border: 2px solid #ffff00;
+            overflow: hidden;
+        }
+
+        .custom-table th, .custom-table td {
+            padding: 5px;
+            text-align: center;
+        }
+
+        .custom-table th:first-child, .custom-table td:first-child {
+            border-top-left-radius: 50px;
+            border-bottom-left-radius: 50px;
+        }
+
+        .custom-table th:last-child, .custom-table td:last-child {
+            border-top-right-radius: 50px;
+            border-bottom-right-radius: 50px;
+        }
+  /* Center alignment for table cells */
+        #rcorners4 {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 0px;
+			border-radius: 15px  15px  15px 15px;
+            border: 1px solid grey;
+            overflow: hidden;
+        }
+        #rcorners4 td {
+            text-align: center; /* Horizontal centering */
+            vertical-align: middle; /* Vertical centering */
+            padding: 10px; /* Add padding for better spacing */
+        }
+        #rcorners4 img {
+            display: block; /* Ensures the image is block-level for proper centering */
+            margin: auto; /* Centers the image horizontally */
+        }
+	 #rcorners1	{
+  	 		border-radius: 10px 70px;
+ 	 		border: 2px solid red;
+ 	 		padding: 5px;
+	 		column-width: auto;
+ 	 		display: inline-block;
+	}
+	#rcorners2	{
+			justify-content: center;
+			text-align: center;
+    		vertical-align: middle;
+  	 		border-radius: 15px 15px;
+ 	 		border: 2px solid #ffff00;
+ 	 		padding: 3px;
+			 }
+	#rcorners3	{
+  	 		border-radius: 10px 70px;
+			border: 4px solid #36454F;
+			padding: 5px;
+			 }
+        /* Media query for responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            .box {
+                margin: 5px 0;
+                padding: 0;
+            }
+        }
+ 
+     #clock{
+          background-image: linear-gradient(to right, rgb(0,0,0)50%, rgb(204,0,0)51%);
+          font-family: Arial;
+          Color: white;
+          font-size: 30px;
+          text-align: center;
+          width:100%;
+          height:auto;
+          border-radius: 10px;
+          padding:0px;
+      }
+    
+    .date {
+         background-image: linear-gradient(to left, rgb(0,0,0)50%, rgb(204,0,0)51%);
+           font-family: Arial;
+           Color: white;
+           font-size: 20px;
+           text-align: center;
+           border: 0px solid Blue;
+           border-radius: 10px;
+	       align-items: center;
+}
+    .td {
+  background:linear-gradient(to right,  rgb(221,255,204) 50%, rgb(201,255,229) 51%);
+  border-radius: 50px;
+ }
+ 
+    ul {
+      border-radius: 15px 60px;
+      border: 2px solid #ffff00;
+      margin: 0;
+      padding: 0;
+      width: auto;
+      justify-content: center; /* Center horizontally */
+      align-items: center;    /* Center vertically */
+      text-align: center;
+      background-color: black;
+      display: inline-block;
+    }
+    li {
+      display: block;
+    }
+    li a {
+      display: block;
+      color: white;
+      padding: 14px 16px;
+      text-decoration: none;
+    }
+    li a:hover {
+      background-color: #111;
+    }
+    .submenu {
+      display: none;
+      background-color: #444;
+    }
+    .submenu li a {
+      padding: 10px 16px;
+    }
+ 
+   
+ 
+   .button-image {
+    width: 90px;
+    height: 80px;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    background: url("image/refresh.jpg") no-repeat center center;
+    background-size: contain;
+}
+    .button-image:hover {
+      transform: scale(1.1); /* Slight enlargement on hover */
+      box-shadow: 0 0 10px #ffff00; /* Glow effect */
+    }
+	   #weather-icon {
+            width: 50px;
+            height: 50px;
+        }
+ #battery {
+      position: absolute;
+      top: 15%; /* Slightly below digit "12" */
+      left: 50%;
+      transform: translate(-50%, 0);
+      font-size: 2em;
+      font-weight: bold;
+      color: white;
+    }
+	.circular-video {
+            width: 50px; /* Adjust size as needed */
+            height: 50px; /* Ensure the width and height are equal for a perfect circle */
+            border-radius: 50%; /* Makes the video circular */
+            overflow: hidden; /* Hides any overflow outside the circle */
+            object-fit: cover; /* Ensures the video fills the circle */
+        }
+ 
+	.marquee,
+    .marquee-with-vertical,
+    .marquee-ver-before,
+    .marquee-ver {
+        	overflow: hidden;
+			border-radius: 10px 70px;
+			background-color: black;
+ 	 		font-family: Arial, sans-serif;
+            color: whitesmoke;
+			margin: 5px 0;
+            padding: 1px;
+            box-sizing: border-box;
+			margin-top: 0;
+            }
+.marquee-with-dr{
+     		overflow: hidden;
+			border-radius: 10px 70px;
+			background-color: black;
+ 	 		font-family: Arial, sans-serif;
+            color: whitesmoke;
+			margin: 5px 0;
+            padding: 1px;
+            box-sizing: border-box;
+			margin-top: 0;
+			font: normal normal bold 16px arial;
+   }
+	.marquee-with-btm{
+     		overflow: hidden;
+			border-radius: 10px 70px;
+			background-color: black;
+ 	 		font-family: Arial, sans-serif;
+            color: black;
+			margin: 5px 0;
+            padding: 1px;
+            box-sizing: border-box;
+			margin-top: 0;
+	}
+.circle {
+    width: 100px;
+    height: 100px;
+    border: 3px solid white;
+    background-color: black;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+     
+	font-size: 2rem; /* Content size inside the circle */
+    text-align: center;
+    margin: auto; /* Centers the circle horizontally in its container */
+	 }
+	  .battery-row {
+      display: flex;
+      align-items: center;
+      gap: 10px; /* space between text and circle */
+  }
+ 

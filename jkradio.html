@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="screen-orientation" content="portrait">
+    <meta name="x5-orientation" content="portrait">
+    
+    <title>Live TV News Radio</title>
+    <link rel="stylesheet" href="./css/button.css">
+    <link rel="apple-touch-icon" href="icon.png">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script>
+    if (typeof AndroidApp !== 'undefined' && typeof AndroidApp.lockPortrait === 'function') {
+        AndroidApp.lockPortrait();
+    }
+    </script>
+    <script>
+        document.addEventListener("contextmenu", function(event) { event.preventDefault(); });
+        document.addEventListener("keydown", function(event) {
+            if (event.ctrlKey && (event.key === 'u' || event.key === 'U')) {
+                event.preventDefault();
+                alert("Viewing source is disabled!");
+            }
+        });
+    </script>
+    
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: white;
+            margin: 0;
+            padding: 15px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            -webkit-user-select: none; 
+            -moz-user-select: none;    
+            -ms-user-select: none;     
+            user-select: none;         
+        }
+
+        #rcorners4 {
+            background: #000000;
+            border-radius: 5px 70px 5px 70px;
+            border: 2px solid grey;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            width: 95vw;
+            max-width: 600px;
+            height: 90vh; 
+            margin: 0 auto;
+            border-collapse: separate;
+            border-spacing: 0; 
+            table-layout: fixed;
+            box-sizing: border-box;
+            overflow: hidden; 
+        }
+        
+        #rcorners4 td {
+            padding: 0;
+            vertical-align: top;
+            height: 100%;
+        }
+
+        .radio-wrapper {
+            display: flex; 
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            background-color: transparent; 
+        }
+
+        .top-section {
+            flex-shrink: 0;
+            padding: 20px 15px 15px 15px;
+            text-align: center;
+            background-color: transparent;
+            border-bottom: 1px solid #1a1a1a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px; 
+        }
+
+        .status {
+            font-size: 11px; 
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #FFFFFF;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .controls-row {
+            display: flex;
+            justify-content: space-between; 
+            align-items: center;
+            width: 100%;
+            padding: 0 10px; 
+        }
+
+        .speaker1, .speaker2 {
+            display: block;
+            width: 80px; 
+            max-width: 25vw; 
+            height: auto;
+            user-select: none;
+        }
+        
+        .speaker1.playing, .speaker2.playing {
+            animation: boom 1.2s infinite;
+        }
+        @keyframes boom {
+            0% { transform: scale(1);}
+            50% { transform: scale(1.15);}
+            100% { transform: scale(1);}
+        }
+
+        .btn-custom {
+            padding: 10px 18px; 
+            background-color: #373b44;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            cursor: pointer;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s ease-in-out;
+            outline: none;
+            flex-shrink: 0; 
+        }
+        .btn-custom:hover { background-color: #4a505c; border-color: rgba(255, 255, 255, 0.8); }
+        .btn-custom:active { transform: scale(0.95); }
+        .btn-custom svg { width: 20px; height: 20px; fill: #ffffff; }
+
+        .volume-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+        }
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 130px; 
+            background: transparent;
+        }
+        input[type=range]:focus { outline: none; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 5px; cursor: pointer; background: #1877f2; border-radius: 4px; }
+        input[type=range]::-webkit-slider-thumb { height: 16px; width: 16px; border-radius: 50%; background: #1877f2; cursor: pointer; -webkit-appearance: none; appearance: none; margin-top: -5.5px; }
+
+        .time-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #000000 40%, #0c0c0c 100%); 
+            padding: 8px 10px; 
+            border-radius: 12px;
+            border: 1px solid #77f34e;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); 
+            width: auto; 
+            margin: 0 auto;
+        }
+
+        .clock {
+            background-image: linear-gradient(to right, rgb(0,0,0) 50%, rgb(204,0,0) 51%);
+            font-family: Arial, sans-serif;
+            color: white;
+            text-align: center;
+            border-radius: 8px;
+            font-size: clamp(24px, 8vw, 40px);
+            font-weight: bold;
+            white-space: nowrap;
+            padding: 4px 15px; 
+        }
+
+        .station-name {
+            font-size: 14px; 
+            font-weight: bold;
+            color: #FFD700;
+            margin: 0;
+            white-space: normal; 
+            text-align: center;
+            text-shadow: 0px 2px 4px rgba(255, 215, 0, 0.3);
+            max-width: 90%;
+        }
+
+        .playlist-container {
+            flex: 0 0 auto; 
+            height: 135px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 15px 15px;
+            display: flex;
+            align-items: center;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+        }
+        
+        .playlist-container::-webkit-scrollbar { height: 6px; }
+        .playlist-container::-webkit-scrollbar-track { background: #000; }
+        .playlist-container::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+        .station-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: row; gap: 12px; }
+        .station-list li {
+            flex: 0 0 auto;
+            width: 140px;
+            height: 100px;
+            padding: 12px;
+            background-color: #000000;
+            border: 1px solid #FFF44F;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+        .station-list li span:first-child { 
+            font-size: 15px; font-weight: bold; color: #FFFFFF; white-space: normal; display: -webkit-box;
+            -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; 
+        }
+        .station-list li.active { background-color: #1a1a00; border: 2px solid #FFD700; box-shadow: inset 0px 0px 10px rgba(255, 215, 0, 0.3); }
+        .station-list li.active span:first-child { color: #FFD700; }
+        .badge { font-size: 10px; padding: 3px 6px; border-radius: 4px; background-color: #333; color: #FFF44F; font-weight: bold; }
+
+        .marquee-wrapper {
+            flex-shrink: 0; width: 100%; display: flex; justify-content: center; align-items: center;
+            height: 60px; overflow: hidden; position: relative; background-color: transparent;
+            border-top: 1px solid #1a1a1a; border-bottom: 1px solid #1a1a1a; 
+        }
+
+        .button1 {
+            display: flex; justify-content: center; align-items: center; padding: 6px 20px; font-size: 18px;
+            color: white; width: 200px; text-align: center; text-decoration: none; border: 2px solid white;
+            border-radius: 15px; position: absolute; opacity: 0; transform: translateX(100%);
+            transition: transform 1s ease-in-out, opacity 1s ease-in-out; background: linear-gradient(to right, #b30000, black, #4d004d); 
+            cursor: pointer; font-weight: bold;
+        }
+        .button1.show { opacity: 1; transform: translateX(0); }
+        .button1.hide { opacity: 0; transform: translateX(-100%); }
+
+        .center-image {
+            width: auto; height: auto; max-width: 100%; max-height: 80px; object-fit: contain;
+            border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); margin: 0 auto; display: block;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        /* --- CORRECTED & CONSOLIDATED REFRESH/HOME BUTTONS --- */
+        .refresh-btn, .home-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            outline: none;
+            margin: 0 auto;
+        }
+
+        .home-img, .refresh-img {
+            transition: transform 0.5s ease;
+            filter: drop-shadow(0 2px 8px #222);
+        }
+
+        .home-img { width: 55px; height: 55px; }
+        .refresh-img { width: 65px; height: 65px; }
+
+        @keyframes spin {
+            from { transform: rotate(0deg);}
+            to { transform: rotate(360deg);}
+        }
+        
+        .refresh-btn:hover .refresh-img,
+        .home-btn:hover .home-img {
+            animation: spin 1.5s infinite linear;
+        }
+
+        .bottom-bar {
+            flex-shrink: 0; display: flex; justify-content: center; gap: 60px; align-items: center;     
+            padding: 10px 20px; background-color: transparent; border-top: 1px solid #1a1a1a;
+            padding-bottom: env(safe-area-inset-bottom, 15px);
+        }
+
+        .minimize-btn {
+            background-color: #373b44; color: #ffffff; border: 1px solid #444; padding: 8px 20px; border-radius: 25px;
+            font-size: 13px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 6px;
+        }
+        .minimize-btn:hover { background-color: #1f3b1f; border-color: #44aa44; color: #44aa44; }
+        .minimize-btn:active { transform: scale(0.95); }
+
+        .exit-btn {
+            background-color: #373b44; color: #ffffff; border: 1px solid #444; padding: 8px 20px; border-radius: 25px;
+            font-size: 13px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 6px;
+        }
+        .exit-btn:hover { background-color: #5c1818; border-color: #ff4444; color: #ff4444; }
+        .exit-btn:active { transform: scale(0.95); }
+
+        #audio-player { display: none; }
+        #iframe-player { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; border: none; }
+    </style>
+</head>
+<body>
+    <table id="rcorners4">
+        <tr>
+            <td>
+                <div class="radio-wrapper" id="radio-wrapper">
+                    
+                    <div class="top-section">
+                        <div class="status" id="status-text">READY</div>
+                        <div class="controls-row">
+                            <img src="image/speaker.png" alt="Speaker" class="speaker1" id="speaker1">
+                            <button id="pauseBtn" class="btn-custom" aria-label="Pause">
+                                <svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                            </button>
+                            <img src="image/speaker.png" alt="Speaker" class="speaker2" id="speaker2">
+                        </div>
+                        <div class="volume-container">
+                            <span style="color: #a0aab5; font-size: 18px;">🔊</span>
+                            <input id="volumeSlider" type="range" min="0" max="1" step="0.1" value="1">
+                        </div>
+                        <div class="time-wrapper">
+                            <div class="clock" id="clock">00:00:00 AM</div>
+                        </div>
+                        <h2 class="station-name" id="current-station">Select a Station</h2>
+                    </div>
+
+                    <div class="playlist-container">
+                        <ul class="station-list" id="playlist"></ul>
+                    </div>
+                    
+                    <div class="marquee-wrapper" id="marquee-container"></div>
+                    
+                    <table style="width: 100%; table-layout: fixed; border-collapse: collapse; margin: 10px auto;">
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle; width: 33.33%; padding: 5px;">  
+                                <button class="refresh-btn" id="refreshBtn" aria-label="Refresh page">
+                                    <img src="image/refresh.jpg" alt="Refresh" class="refresh-img">
+                                </button>
+                            </td>
+                            <td style="text-align: center; vertical-align: middle; width: 33.33%; padding: 5px;"> 
+                                <img src="image/jatinder.png" alt="Display Image" class="center-image">
+                            </td>
+                            <td style="text-align: center; vertical-align: middle; width: 33.33%; padding: 5px;"> 
+                                <button class="home-btn" id="rhomeBtn" aria-label="home page">
+                                    <img src="image/home.png" alt="Home" class="home-img">
+                                </button>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <audio id="audio-player" playsinline preload="auto"></audio>
+                    <iframe id="iframe-player" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
+                    <div class="bottom-bar">
+                       <button class="minimize-btn" id="minimizeAppBtn" aria-label="Minimize Application">
+                           <span style="color: #44aa44; font-size: 16px; line-height: 1;">_</span> <span>MIN</span>
+                       </button>
+                       <button class="exit-btn" id="exitAppBtn" aria-label="Exit Application">
+                            <span id="exitIcon" style="color: #ff4444; font-size: 14px;">✖</span> <span>EXIT</span>
+                        </button>
+                    </div>
+                    
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <script>
+        function showTime() {
+            let time = new Date();
+            let hour = time.getHours();
+            let min = time.getMinutes();
+            let sec = time.getSeconds();
+            let am_pm = "AM";
+            
+            if (hour >= 12) { if (hour > 12) hour -= 12; am_pm = "PM"; }
+            if (hour == 0) { hour = 12; am_pm = "AM"; }
+            
+            hour = hour < 10 ? "0" + hour : hour;
+            min = min < 10 ? "0" + min : min;
+            sec = sec < 10 ? "0" + sec : sec;
+            
+            const clockEl = document.getElementById("clock");
+            if (clockEl) { clockEl.innerHTML = hour + ":" + min + ":" + sec + " " + am_pm; }
+        }
+        setInterval(showTime, 1000);
+        showTime();
+
+        const stations = [
+            { name: "R Bharat", url: "https://vg-republictvlive.akamaized.net/v1/master/611d79b11b77e2f571934fd80ca1413453772ac7/vglive-sk-275673/main.m3u8", type: "M3U8" },
+            { name: "Aaj Tak HD", url: "https://feeds.intoday.in/aajtak/api/aajtakhd/master.m3u8", type: "M3U8" },
+            { name: "Zee TV", url: "https://zeenews.india.com/hindi/live-tv/embed?autoplay=1&mute=0", type: "WEB" },
+            { name: "TV9 Hindi", url: "https://static.vidgyor.com/player/account/tv9/html/tv9_v12.html?videoId=aca8e80cceddb_live&accountId=62bafd8513ddad0009e72496&autoplay=1&mute=0", type: "WEB" },
+            { name: "NDTV India", url: "https://ndtvindiaelemarchana.akamaized.net/hls/live/2003679/ndtvindia/master.m3u8", type: "M3U8" },
+            { name: "ABP Bews", url: "https://cdn.abplive.com/LiveStreams/abp_live_tv/hindi/live-tv.html?autoplay=1&mute=0", type: "WEB" },
+            { name: "IndiaTV", url: "https://www.indiatvnews.com/iframe/playerlivetv?accountId=63bd2161756d5f000872bc0b&videoId=9ffbeb67a09d8_live&playerDivId=vidgyor&pip=0&piv=0&autoplay=1&mute=0&aspectRatio=16:9", type: "WEB" },
+            { name: "VividhsBharti", url: "https://air.pc.cdn.bitgravity.com/air/live/pbaudio001/playlist.m3u8", type: "M3U8" },
+            { name: "Jammu", url: "https://air.pc.cdn.bitgravity.com/air/live/pbaudio128/playlist.m3u8", type: "M3U8" },
+            { name: "Radio Mirchi", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/NJS_HIN_ESTAAC.m3u8", type: "M3U8" },
+            { name: "FM Rainbow", url: "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio004/hlspbaudio00464kbps.m3u8", type: "M3U8" },
+            { name: "Dharamshala", url: "https://air.pc.cdn.bitgravity.com/air/live/pbaudio165/playlist.m3u8", type: "M3U8" },
+            { name: "Dehradun", url: "https://air.pc.cdn.bitgravity.com/air/live/pbaudio191/playlist.m3u8", type: "M3U8" },
+            { name: "Air News", url: "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio002/hlspbaudio002_Auto.m3u8", type: "M3U8" },
+            { name: "Big Fm", url: "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio006/hlspbaudio006_Auto.m3u8", type: "M3U8" },
+            { name: "FM Gold", url: "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio005/hlspbaudio005_Auto.m3u8", type: "M3U8" },
+            { name: "Radio City", url: "https://server.mixify.in:8010/radio.mp3?type=http&nocache=15412/;stream/1", type: "MP3" }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const audioPlayer = document.getElementById('audio-player');
+            const iframePlayer = document.getElementById('iframe-player');
+            const pauseBtn = document.getElementById('pauseBtn');
+            const volSlider = document.getElementById('volumeSlider');
+            const playlistElement = document.getElementById('playlist');
+            const marqueeContainer = document.getElementById('marquee-container');
+            const currentStationText = document.getElementById('current-station');
+            const statusText = document.getElementById('status-text');
+            const speakers = document.querySelectorAll('.speaker1, .speaker2');
+            
+            let hls = null;
+            let wakeLock = null; 
+            let currentActiveStation = null;
+            let marqueeInterval = null;
+
+            async function requestWakeLock() {
+                try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } catch (err) { }
+            }
+
+            function releaseWakeLock() {
+                if (wakeLock !== null) { wakeLock.release().then(() => { wakeLock = null; }); }
+            }
+
+            document.addEventListener('visibilitychange', async () => {
+                if (document.visibilityState === 'visible') {
+                    if (wakeLock !== null) { requestWakeLock(); }
+                    if (currentActiveStation && currentActiveStation.type === "M3U8" && audioPlayer.paused) {
+                        audioPlayer.play().catch(e => console.log(e));
+                    }
+                }
+            });
+
+            function setupMediaSession(stationName) {
+                if ('mediaSession' in navigator) {
+                    navigator.mediaSession.metadata = new MediaMetadata({ title: stationName, artist: 'Live Broadcast Station' });
+                    navigator.mediaSession.setActionHandler('play', () => { audioPlayer.play(); setUIPlayingState(false); });
+                    navigator.mediaSession.setActionHandler('pause', () => { audioPlayer.pause(); setUIPausedState(); });
+                }
+            }
+
+            function renderPlaylist() {
+                playlistElement.innerHTML = ''; 
+                marqueeContainer.innerHTML = '';
+                stations.forEach((station, index) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span>${station.name}</span> <span class="badge">${station.type}</span>`;
+                    li.onclick = () => playStation(station, li);
+                    playlistElement.appendChild(li);
+
+                    const btn = document.createElement('div');
+                    btn.className = 'button1';
+                    btn.innerText = station.name;
+                    btn.onclick = () => playStation(station, li); 
+                    marqueeContainer.appendChild(btn);
+                });
+                startMarquee();
+            }
+
+            function startMarquee() {
+                const buttons = document.querySelectorAll('.button1');
+                if(buttons.length === 0) return;
+                let index = 0;
+                if(marqueeInterval) clearInterval(marqueeInterval);
+                function showButtons() {
+                    buttons.forEach(btn => btn.classList.remove('show', 'hide'));
+                    buttons[index].classList.add('show');
+                    let prevIndex = (index - 1 + buttons.length) % buttons.length;
+                    buttons[prevIndex].classList.add('hide');
+                    index = (index + 1) % buttons.length;
+                }
+                showButtons(); 
+                marqueeInterval = setInterval(showButtons, 3000);
+            }
+
+            function setUIPlayingState(isEmbedded) {
+                statusText.innerText = isEmbedded ? "LIVE (EMBED)" : "LIVE BROADCAST";
+                speakers.forEach(s => s.classList.add('playing')); 
+                requestWakeLock();
+            }
+
+            function setUIPausedState() {
+                statusText.innerText = "PAUSED";
+                speakers.forEach(s => s.classList.remove('playing'));
+                releaseWakeLock();
+            }
+
+            function playStation(station, listItem) {
+                currentActiveStation = station;
+                document.querySelectorAll('.station-list li').forEach(el => el.classList.remove('active'));
+                if (listItem) { listItem.classList.add('active'); listItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); }
+                currentStationText.innerText = station.name;
+                statusText.innerText = "CONNECTING...";
+                speakers.forEach(s => s.classList.remove('playing'));
+                setupMediaSession(station.name);
+                requestWakeLock(); 
+
+                if (hls) { hls.destroy(); hls = null; }
+                audioPlayer.pause(); audioPlayer.removeAttribute('src'); audioPlayer.load(); iframePlayer.src = "";
+
+                if (station.type === "WEB") {
+                    iframePlayer.src = station.url;
+                    setTimeout(() => { setUIPlayingState(true); }, 2500);
+                } else {
+                    if (station.type === "M3U8") {
+                        if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+                            hls = new Hls(); hls.loadSource(station.url); hls.attachMedia(audioPlayer);
+                            hls.on(Hls.Events.MANIFEST_PARSED, function() { audioPlayer.play(); });
+                        } else if (audioPlayer.canPlayType('application/vnd.apple.mpegurl')) {
+                            audioPlayer.src = station.url; audioPlayer.play();
+                        }
+                    } else { 
+                        audioPlayer.src = station.url; audioPlayer.play();
+                    }
+                }
+            }
+
+            pauseBtn.addEventListener('click', () => {
+                if (!currentActiveStation) return;
+                if (currentActiveStation.type === "WEB") {
+                    iframePlayer.src = ""; setUIPausedState();
+                } else {
+                    if (audioPlayer.paused) { audioPlayer.play(); setUIPlayingState(false); } 
+                    else { audioPlayer.pause(); setUIPausedState(); }
+                }
+            });
+
+            volSlider.addEventListener('input', function() { audioPlayer.volume = this.value; });
+            audioPlayer.addEventListener('playing', () => setUIPlayingState(false));
+            audioPlayer.addEventListener('pause', setUIPausedState);
+            audioPlayer.addEventListener('waiting', () => { statusText.innerText = "BUFFERING..."; speakers.forEach(s => s.classList.remove('playing')); });
+            audioPlayer.addEventListener('error', () => { statusText.innerText = "STREAM OFFLINE"; speakers.forEach(s => s.classList.remove('playing')); });
+
+            document.getElementById('refreshBtn').addEventListener('click', function() {
+                this.querySelector('.refresh-img').style.animation = 'spin 1s linear infinite'; setTimeout(() => { window.location.reload(); }, 500);
+            });
+            document.getElementById('rhomeBtn').addEventListener('click', function() {
+                this.querySelector('.home-img').style.animation = 'spin 1s linear infinite'; setTimeout(() => { window.location.href = "tvhome.html"; }, 500);
+            });
+
+            // TRIGGER NATIVE PiP
+            document.getElementById('minimizeAppBtn').addEventListener('click', () => {
+                if (typeof AndroidApp !== 'undefined' && typeof AndroidApp.minimizeApp === 'function') {
+                    AndroidApp.minimizeApp();
+                }
+            });
+
+            document.getElementById('exitAppBtn').addEventListener('click', () => {
+                if (typeof AndroidApp !== 'undefined' && typeof AndroidApp.exitApp === 'function') { AndroidApp.exitApp(); } 
+                else { window.close(); }
+            });
+
+            renderPlaylist();
+            if (stations.length > 0) { playStation(stations[0], document.querySelector('.station-list li')); }
+        });
+    </script>
+</body>
+</html>

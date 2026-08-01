@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Aaj Tak Live TV Custom Player</title>
+
+<!-- Required Stylesheet for the Aaj Tak player -->
+<link rel="stylesheet" href="https://feeds.intoday.in/livetv/ver-3-0/livetv-min.css?ver=21-02-2025"/>
+<script>
+    // Tell the Android App to unlock the screen and allow rotation
+    if (typeof AndroidApp !== 'undefined' && typeof AndroidApp.unlockOrientation === 'function') {
+        AndroidApp.unlockOrientation();
+    }
+</script>
+<script>
+    // Disable right-click
+    document.addEventListener("contextmenu", function(event) {
+        event.preventDefault();
+    });
+
+    // Block Ctrl+U
+    document.addEventListener("keydown", function(event) {
+        if (event.ctrlKey && (event.key === 'u' || event.key === 'U')) {
+            event.preventDefault();
+            alert("Viewing source is disabled!");
+        }
+    });
+</script>
+
+<style>
+    body {
+        text-align: center;
+        background-color: black;
+        color: white;
+        margin: 0;
+        padding: 0;
+        overflow: hidden; 
+    }
+
+    /* Video Container */
+    .video-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100vw;
+        height: 100vh;
+        background: #000;
+    }
+
+    #vidcont {
+        width: 100%;
+        height: 100%;
+        position: relative;
+    }
+
+    #videoplayer {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    /* Navigation Controls */
+    .home-btn {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      z-index: 10;
+    }
+
+    .refresh-btn {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    /* Fallback warning if they hold phone vertically on iOS */
+    #portrait-warning {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: black;
+        color: white;
+        z-index: 99999;
+        justify-content: center;
+        align-items: center;
+        font-family: Arial, sans-serif;
+        font-size: 1.2rem;
+        text-align: center;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    @media screen and (orientation: portrait) {
+        #portrait-warning {
+            display: flex;
+        }
+        .video-container, .home-btn, .refresh-btn {
+            display: none;
+        }
+    }
+</style>
+</head>
+<body>
+
+  <!-- iOS Fallback Warning -->
+  <div id="portrait-warning">
+      <div>
+        <p style="font-size: 50px; margin: 0 0 15px 0;">🔄</p>
+        Please rotate your device sideways.
+      </div>
+  </div>
+
+  <!-- Target container for the script to load the video -->
+  <div class="video-container">
+      <div id="vidcont">
+          <div id="videoplayer"></div>
+      </div>
+  </div>
+
+  <img src="image/refresh.jpg" alt="Reload" id="refreshButton"
+       onclick="location.reload();" width="70" height="70" class="refresh-btn">
+
+  <a href="tvtvnews.html" class="home-btn">
+    <img src="image/home.png" alt="Back To Home" width="65" height="65">
+  </a>
+
+  <!-- Required Library Dependencies for the player -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://feeds.intoday.in/livetv/hls.min.js?noCache=2020-04-16-0935"></script>
+  <script src="https://feeds.intoday.in/livetv/ver-3-0/livetv-min.js?ver=21-02-2025"></script>
+
+  <script>
+    // Initialize the player directly when the document is ready
+    $(document).ready(function() {
+        var athdParam = {
+            default_Player: "",
+            gap_ac: "UA-7530357-30",
+            id: "livetv-athd",
+            isLive: "true",
+            aud_togle: "false", // Tells the player to attempt unmuted playback
+            noads: "true",
+            autostart: 1, // Keeps auto-play enabled
+            url: 'U2FsdGVkX1/zIF4LlDlcGBWc1rAiG9U3y7v9ZUzCVuBZgyjw0/QE+rIRpivjysaK9K+QTKJQ7ihOBxBb+9ZO0xGMrVP3vh9dddoq5JdXOMs=',
+            title: "Aajtak HD Live TV",
+            share_link: "https://www.aajtakhd.com",
+            publisherId: "8549097"
+        };
+        
+        // This triggers the custom script to build the video element inside #videoplayer automatically
+        var livetv = new liveTvEmbed(athdParam, "videoplayer");
+    });
+  </script>
+</body>
+</html>

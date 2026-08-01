@@ -1,0 +1,194 @@
+/* ==========================================================================
+   BASE RESET & THEME
+   ========================================================================== */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #000000; /* Black background */
+    color: #FFD700; /* Gold foreground text */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: row; /* Desktop: side-by-side */
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* ==========================================================================
+   FLOATING BACK BUTTON (Works on Desktop & Mobile)
+   ========================================================================== */
+.back-circle {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 100;
+    width: 40px;
+    height: 40px;
+    background: #222222;
+    border: 1px solid #FFD700;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.8);
+    transition: background 0.2s ease;
+}
+
+.back-circle::after {
+    content: '\279C';
+    font-size: 22px;
+    color: #FFD700;
+    transform: rotate(180deg);
+}
+
+.back-circle:hover {
+    background: #FFD700;
+}
+
+.back-circle:hover::after {
+    color: #000000;
+}
+
+/* ==========================================================================
+   SIDEBAR STYLING
+   ========================================================================== */
+#sidebar {
+    width: 300px;
+    min-width: 300px;
+    background-color: #111111;
+    border-right: 2px solid #FFD700;
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+}
+
+#sidebar h2 {
+    text-align: center;
+    padding: 20px 0;
+    margin: 0;
+    border-bottom: 1px solid #333333;
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+}
+
+#channel-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow-y: auto;
+    flex-grow: 1;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+#channel-list li {
+    padding: 15px 20px;
+    cursor: pointer;
+    border-bottom: 1px solid #222222;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-weight: 500;
+}
+
+#channel-list li:hover,
+#channel-list li.active {
+    background-color: #FFD700;
+    color: #000000;
+}
+
+.loading-text {
+    text-align: center;
+    font-style: italic;
+    color: #aaaaaa;
+}
+
+/* ==========================================================================
+   PLAYER CONTAINER STYLING
+   ========================================================================== */
+#player-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background-color: #0a0a0a;
+    box-sizing: border-box;
+}
+
+#current-title {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.8rem;
+    text-shadow: 1px 1px 5px rgba(255, 215, 0, 0.3);
+    text-align: center;
+}
+
+/* Video.js Wrapper Responsive Control */
+#iptv-player {
+    width: 100%;
+    max-width: 900px;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    border: 2px solid #FFD700;
+    border-radius: 8px;
+    box-shadow: 0px 0px 20px rgba(255, 215, 0, 0.2);
+}
+
+/* Video.js UI Theme Overrides */
+.video-js .vjs-control-bar {
+    background-color: rgba(17, 17, 17, 0.9);
+}
+.video-js .vjs-play-progress,
+.video-js .vjs-volume-level {
+    background-color: #FFD700;
+}
+.video-js .vjs-big-play-button {
+    background-color: rgba(17, 17, 17, 0.8);
+    border-color: #FFD700;
+    color: #FFD700;
+}
+
+/* ==========================================================================
+   MOBILE & TABLET RESPONSIVE LAYOUT (Screens under 768px wide)
+   ========================================================================== */
+@media (max-width: 768px) {
+    body {
+        flex-direction: column;
+    }
+
+    #player-container {
+        flex-grow: 0;
+        width: 100%;
+        padding: 10px;
+        order: 1; 
+        margin-top: 50px; /* Gives the back button breathing room at the top */
+    }
+
+    #current-title {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+
+    #iptv-player {
+        border-radius: 4px;
+    }
+
+    #sidebar {
+        width: 100%;
+        min-width: 100%;
+        flex-grow: 1;
+        border-right: none;
+        border-top: 2px solid #FFD700;
+        order: 2;
+        overflow: hidden;
+    }
+
+    #sidebar h2 {
+        padding: 10px 0;
+        font-size: 1.2rem;
+    }
+
+    #channel-list li {
+        padding: 12px 15px;
+        font-size: 0.95rem;
+    }
+}

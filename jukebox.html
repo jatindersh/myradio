@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  
+  <meta name="screen-orientation" content="portrait" />
+  <meta name="x5-orientation" content="portrait" />
+  
+  <title>Classic Jukebox Audio Player</title>
+
+  <link rel="shortcut icon" href="image/jkpic2.png" type="image/png" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.2.2/hls.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet" />
+ <link rel="stylesheet" href="css/button.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: 'Courier New', monospace;
+      text-align: center;
+      background-color: black;
+      color: white;
+      padding: 10px; 
+      margin: 0;
+      min-height: 100vh; 
+      display: flex; 
+      flex-direction: column; 
+      justify-content: center; 
+      align-items: center;
+      
+      /* --- PREVENTS TEXT SELECTION ANYWHERE ON SCREEN --- */
+      -webkit-user-select: none; /* Chrome, Safari, Android */
+      -moz-user-select: none;    /* Firefox */
+      -ms-user-select: none;     /* IE/Edge */
+      user-select: none;         /* Standard syntax */
+    }
+
+    /* PURE CSS MARQUEE - GPU ACCELERATED */
+    .css-marquee-container {
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto 10px auto;
+      overflow: hidden;
+      white-space: nowrap;
+      display: block;
+    }
+
+    .css-marquee-text {
+      display: inline-block;
+      padding-left: 100%;
+      animation: marquee-scroll 15s linear infinite;
+    }
+
+    @keyframes marquee-scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+
+    .butt {
+      padding: 10px;
+      width: 45%; 
+      max-width: 140px;
+      margin: 5px 1%;
+      cursor: pointer;
+      border: none;
+      background-color: #f0bc1e;
+      color: black;
+      font-size: clamp(14px, 4vw, 20px); 
+      font-weight: bold;
+      border-radius: 5px;
+      user-select: none;
+      transition: background-color 0.3s ease;
+    }
+
+    .button:hover { background-color: #ff9900; }
+
+    .jukebox {
+      border: 4px solid #ffcc00;
+      padding: 15px;
+      display: block; 
+      border-radius: 10px;
+      width: 100%;
+      max-width: 400px;
+      margin: 0; 
+    }
+
+    h1 {
+      font-size: clamp(20px, 6vw, 24px);
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+    }
+
+    #stationName {
+      word-wrap: break-word; 
+      padding: 0 5px;
+    }
+
+    .speaker {
+      display: block;
+      margin: auto;
+      width: 100%;
+      max-width: 180px; 
+      height: auto;
+      user-select: none;
+    }
+
+    .speaker.playing { animation: boom 1.2s infinite; }
+
+    @keyframes boom {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    .styled-text {
+      font-family: "Great Vibes", cursive;
+      font-size: clamp(20px, 4vw, 28px); 
+      color: whitesmoke;
+      font-weight: 300;
+      text-align: center;
+      line-height: 1.0;
+      user-select: none;
+    }
+
+    canvas {
+      width: 100%;
+      height: 70px;
+      background: black;
+      display: block;
+      margin-top: 20px;
+      border-radius: 10px 70px;
+    }
+
+     .footer-controls {
+            display: flex; 
+            justify-content: center; 
+            align-items: center;  
+            gap: 15px;
+            margin-top: 20px;
+        }
+    
+    .refresh-btn, .home-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .home-img, .refresh-img {
+            transition: transform 0.5s ease;
+            filter: drop-shadow(0 2px 8px #222);
+        }
+        .home-img { width: 55px; height: 55px; }
+        .refresh-img { width: 65px; height: 65px; }
+
+        @keyframes spin {
+            from { transform: rotate(0deg);}
+            to { transform: rotate(360deg);}
+        }
+        
+        .refresh-btn:hover .refresh-img,
+        .home-btn:hover .home-img {
+            animation: spin 1.5s infinite linear;
+        }
+    
+    .volume-container {
+      width: 100%;
+      max-width: 300px;
+      margin: 15px auto 5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: center;
+    }
+    .volume-slider { flex: 1; }
+  </style>
+
+  <script>
+    document.addEventListener("contextmenu", (e) => e.preventDefault());
+    document.addEventListener("keydown", (e) => {
+      if (e.ctrlKey && (e.key === "u" || e.key === "U")) {
+        e.preventDefault();
+        alert("Viewing source is disabled!");
+      }
+    });
+
+    // Portrait Orientation Lock Command
+    window.addEventListener("load", function() {
+        if (typeof AndroidApp !== 'undefined' && typeof AndroidApp.lockPortrait === 'function') {
+            AndroidApp.lockPortrait();
+        }
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('portrait').catch(function(error) {});
+        }
+    });
+  </script>
+</head>
+<body>
+  <video 
+      src="video/silent.mp4" 
+      autoplay 
+      loop 
+      muted 
+      playsinline
+      style="position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none;">
+  </video>
+
+  <div class="jukebox">
+    <!-- GPU Accelerated CSS Marquee Replaces standard <marquee> -->
+    <div class="css-marquee-container">
+        <div class="css-marquee-text">
+            Radio Stream depends upon Internet speed or Server of Relay
+        </div>
+    </div>
+    
+    <img src="image/speaker.png" alt="Speaker" class="speaker" id="speaker" />
+
+    <p id="stationName" aria-live="polite" aria-atomic="true">Station 1: Zeno FM</p>
+
+    <button id="play" class="butt" type="button">▶ Play</button>
+    <button id="pause" class="butt" type="button" style="display:none;">⏸ Pause</button>
+    <br />
+    <button id="prev" class="butt" type="button">⏮ Prev</button>
+    <button id="next" class="butt" type="button">⏭ Next</button>
+    <br />
+     
+    <div class="volume-container">
+      <span>🔊</span>
+      <input type="range" id="volume_value" class="volume-slider" min="0" max="1" step="0.01" value="0.5" />
+    </div>
+
+    <canvas id="visualizer"></canvas>
+  
+    <audio id="audioPlayer" preload="auto" crossorigin="anonymous"></audio>
+    <br>
+    
+  <div class="footer-controls">
+       <button class="refresh-btn" id="refreshBtn" aria-label="Refresh page">
+                <img src="image/refresh.jpg" alt="Refresh" class="refresh-img">
+            </button>
+             <div class="styled-text">&ensp;&ensp; Jatinder&ensp;&ensp;</div>
+
+            <button class="home-btn" id="rhomeBtn" aria-label="home page">
+                <img src="image/home.png" alt="Home" class="home-img">
+            </button>
+   
+            <script>
+               document.getElementById('refreshBtn').addEventListener('click', function() {
+        this.querySelector('.refresh-img').style.animation = 'spin 1s linear infinite';
+        setTimeout(() => { window.location.reload(); }, 500);
+    });
+
+    document.getElementById('rhomeBtn').addEventListener('click', function() {
+        var homeImg = this.querySelector('.home-img');
+        if (homeImg) homeImg.style.animation = 'spin 1s linear infinite'; 
+        setTimeout(() => { window.location.href = "tvhome.html"; }, 500);
+    });
+            </script>
+      </div>  
+  </div>
+
+  <script src="js/radioplayer-2.js"></script>
+  <script>
+    var refreshBtn = document.getElementById('refreshBtn');
+    if(refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+            var refreshImg = refreshBtn.querySelector('.refresh-img');
+            if(refreshImg) refreshImg.style.animation = 'spin 1s linear infinite';
+            setTimeout(() => { window.location.reload(); }, 500);
+        });
+    }
+
+    var homeBtn = document.getElementById('rhomeBtn'); 
+    if(homeBtn) {
+        homeBtn.addEventListener('click', function() {
+            var homeImg = homeBtn.querySelector('.home-img');
+            if (homeImg) { homeImg.style.animation = 'spin 1s linear infinite'; }
+            setTimeout(() => { window.location.href = "index.html"; }, 500);
+        });
+    }
+
+    // --- NEW FIX: NATIVE ANDROID VOLUME CONTROL BRIDGE ---
+    var volumeSlider = document.getElementById('volume_value');
+    var audioPlayer = document.getElementById('audioPlayer');
+    
+    if (volumeSlider) {
+        volumeSlider.addEventListener('input', function() {
+            var vol = parseFloat(this.value);
+            
+            // 1. Adjust HTML5 Audio Player Volume
+            if (audioPlayer) {
+                audioPlayer.volume = vol;
+            }
+            
+            // 2. Send Volume level to Native Android Hardware
+            if (typeof AndroidApp !== 'undefined' && typeof AndroidApp.setVolume === 'function') {
+                AndroidApp.setVolume(vol);
+            }
+        });
+    }
+  </script>
+</body>
+</html>
