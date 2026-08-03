@@ -13,7 +13,25 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="JKradio">
     <link rel="apple-touch-icon" href="icon.png">
-
+<script>
+    // Check if the browser supports service workers
+    if ('serviceWorker' in navigator) {
+        // Wait for the window to load before registering to prioritize initial page speed
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then((registration) => {
+                    // Registration was successful
+                    console.log('Service Worker registration successful with scope:', registration.scope);
+                })
+                .catch((error) => {
+                    // Registration failed
+                    console.error('Service Worker registration failed:', error);
+                });
+        });
+    } else {
+        console.warn('Service workers are not supported by this browser.');
+    }
+</script>
     <script>
         document.addEventListener("contextmenu", function(event) { event.preventDefault(); });
         document.addEventListener("keydown", function(event) {
@@ -210,6 +228,121 @@
       width: 90px;
       height: 30px;
     }
+
+    /* ========================================= */
+    /* --- ADVANCED PWA INSTALL POPUP CSS ---    */
+    /* ========================================= */
+    .install-popup-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 10000;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(5px);
+    }
+    
+    .install-popup-content {
+        background-color: #000000;
+        border: 2px solid #ccff00;
+        border-radius: 12px;
+        padding: 30px;
+        text-align: center;
+        width: 85%;
+        max-width: 350px;
+        box-shadow: 0px 10px 30px rgba(204, 255, 0, 0.2);
+        font-family: sans-serif;
+    }
+
+    .install-popup-content h3 {
+        margin-top: 0;
+        color: #ccff00;
+        font-size: 22px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .install-popup-content p {
+        font-size: 14px;
+        margin-bottom: 25px;
+        color: #FFFFFF;
+        line-height: 1.5;
+    }
+
+    .install-popup-actions {
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+    }
+
+    .install-popup-actions button {
+        flex: 1;
+        padding: 12px 0;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 14px;
+        transition: 0.3s;
+        text-transform: uppercase;
+    }
+
+    #btn-cancel-install {
+        background-color: transparent;
+        border: 2px solid #ccff00;
+        color: #ccff00;
+    }
+
+    #btn-install-app {
+        background-color: #ccff00;
+        border: 2px solid #ccff00;
+        color: #000000;
+    }
+
+    #btn-cancel-install:hover { background-color: rgba(204, 255, 0, 0.1); }
+    #btn-install-app:hover { background-color: #aacc00; }
+
+    /* ========================================= */
+    /* --- iOS Install Instruction Styles ---    */
+    /* ========================================= */
+    #ios-install-instruction {
+        display: none;
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 85%;
+        max-width: 350px;
+        background-color: #000000;
+        border: 2px solid #ccff00;
+        color: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0px 10px 30px rgba(204, 255, 0, 0.2);
+        text-align: center;
+        z-index: 10000;
+        font-family: sans-serif;
+    }
+
+    #ios-install-instruction h3 {
+        margin-top: 0; 
+        color: #ccff00; 
+        font-size: 20px;
+        text-transform: uppercase;
+    }
+    
+    #close-ios-btn {
+        background-color: #ccff00;
+        color: #000;
+        border: none;
+        padding: 10px 20px;
+        margin-top: 15px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        width: 100%;
+        text-transform: uppercase;
+    }
     </style>
 </head>
 <body>
@@ -270,6 +403,25 @@
         </table>
     </div>
 
+    <!-- iOS Install Instruction -->
+    <div id="ios-install-instruction">
+        <h3>Add to iPhone</h3>
+        <p style="font-size: 14px; line-height: 1.5;">Tap the Share button <span style="font-size: 20px;">⍗</span> below and select <br><strong>"Add to Home Screen"</strong>.</p>
+        <button id="close-ios-btn">Got it</button>
+    </div>
+
+    <!-- Custom Android/Desktop Install Popup -->
+    <div id="install-popup" class="install-popup-overlay">
+        <div class="install-popup-content">
+            <h3>Add to Home Screen</h3>
+            <p>Install <b>JKradio</b> on your device for a faster, full-screen native experience.</p>
+            <div class="install-popup-actions">
+                <button id="btn-cancel-install">Not Now</button>
+                <button id="btn-install-app">Install</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         function showTime() {
             let time = new Date();
@@ -307,6 +459,59 @@
                 window.close();
             }
         });
+
+        // --- ADVANCED PWA INSTALL LOGIC (Android/Desktop) ---
+        let deferredPrompt;
+        const installPopup = document.getElementById('install-popup');
+        const btnInstallApp = document.getElementById('btn-install-app');
+        const btnCancelInstall = document.getElementById('btn-cancel-install');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                return; 
+            }
+            deferredPrompt = e;
+            installPopup.style.display = 'flex';
+        });
+
+        btnInstallApp.addEventListener('click', async () => {
+            installPopup.style.display = 'none';
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to the install prompt: ${outcome}`);
+                deferredPrompt = null;
+            }
+        });
+
+        btnCancelInstall.addEventListener('click', () => {
+            installPopup.style.display = 'none';
+        });
+
+        window.addEventListener('appinstalled', () => {
+            installPopup.style.display = 'none';
+            deferredPrompt = null;
+            console.log('App was installed successfully.');
+        });
+
+        // --- iOS DETECTION AND BANNER LOGIC ---
+        const isIOS = () => {
+            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        };
+
+        const isStandalone = () => {
+            return ('standalone' in window.navigator) && window.navigator.standalone;
+        };
+
+        if (isIOS() && !isStandalone()) {
+            const iosBanner = document.getElementById('ios-install-instruction');
+            iosBanner.style.display = 'block';
+
+            document.getElementById('close-ios-btn').addEventListener('click', () => {
+                iosBanner.style.display = 'none';
+            });
+        }
     </script>
 </body>
 </html>
