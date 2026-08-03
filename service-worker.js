@@ -21,7 +21,9 @@ const ASSETS_TO_CACHE = [
     '/js/pwa.js',
     '/image/jatinder.jpg',
     '/image/exit.png',
-    '/icon.png'
+    '/icon.png',
+    '/image/192.png',
+    '/image/512.png'
 ];
 
 // 1. Install Event: Pre-cache the assets

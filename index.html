@@ -61,15 +61,6 @@
     <script src="js/pwa.js"></script>
     <link rel="stylesheet" href="./css/button.css">
        
-    <script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-           navigator.serviceWorker.register('/service-worker.js')
-                .catch(error => { console.error('Service Worker registration failed:', error); });
-        });
-    }
-    </script>
-
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-11LJDT3LXX"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
