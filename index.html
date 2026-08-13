@@ -442,32 +442,27 @@
         setInterval(showTime, 1000);
         showTime();
 
-       document.getElementById('exitButton').addEventListener('click', function() {
-    if (typeof AndroidApp !== 'undefined') {
-        // Closes perfectly in your Android WebView
-        AndroidApp.exitApp();
-    } else {
-        // Attempt to close in standard browsers (Windows/Desktop)
-        try {
-            // This trick tells the browser the window was opened by a script, 
-            // which sometimes bypasses the security restriction in certain browsers.
-            window.open('', '_self', ''); 
-            window.close();
-        } catch (e) {
-            console.error("Window close error:", e);
-        }
-        
-        // Check if the tab is still open after attempting to close it
-        setTimeout(function() {
-            if (!window.closed) {
-                // Fallback 1: Tell the user
-                alert("Your browser's security prevents closing this tab automatically. Please close the tab manually (Ctrl + W).");
-                
-                // Fallback 2: Optionally simulate a closed app by blanking the screen
-                // window.location.href = "about:blank"; 
-            }
-        }, 300);
+    document.getElementById('exitButton').addEventListener('click', function() {
+    // Attempt to close in standard browsers (Windows/Desktop)
+    try {
+        // This trick tells the browser the window was opened by a script, 
+        // which sometimes bypasses the security restriction in certain browsers.
+        window.open('', '_self', ''); 
+        window.close();
+    } catch (e) {
+        console.error("Window close error:", e);
     }
+    
+    // Check if the tab is still open after attempting to close it
+    setTimeout(function() {
+        if (!window.closed) {
+            // Fallback 1: Tell the user
+            alert("Your browser's security prevents closing this tab automatically. Please close the tab manually (Ctrl + W).");
+            
+            // Fallback 2: Optionally simulate a closed app by blanking the screen
+            // window.location.href = "about:blank"; 
+        }
+    }, 300);
 });
        
 
