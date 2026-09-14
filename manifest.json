@@ -20,9 +20,9 @@
       "purpose": "any"
     },
     {
-      "src": "image/speaker.jpg",
+      "src": "image/picone.png",
       "sizes": "1024x1024",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "maskable"
     }
   ]
