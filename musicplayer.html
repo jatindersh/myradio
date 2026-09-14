@@ -205,20 +205,21 @@
         .playlist-container::-webkit-scrollbar-track { background: #000000; }
         .playlist-container::-webkit-scrollbar-thumb { background: #FFD700; border-radius: 10px; }
 
-        /* --- FIXED BOTTOM FOOTER --- */
-        .footer-container {
-            display: flex; 
-            justify-content: space-evenly; 
-            align-items: center; 
-            flex-wrap: wrap; 
-            width: 100%; 
-            padding: 10px 0; 
-            gap: 10px;
-            margin-bottom: 0;
-            flex-shrink: 0;
-            background: linear-gradient(0deg, #1a1a1a 0%, #000000 100%);
-            border-top: 2px solid #FFD700; /* Golden border to match header */
-        }
+      /* --- FIXED BOTTOM FOOTER --- */
+  .footer-container {
+      display: flex; 
+      justify-content: space-evenly; 
+      align-items: center; 
+      flex-wrap: wrap; 
+      width: 100%; 
+      /* Dynamically adds safe area padding to the bottom */
+      padding: 10px 0 calc(10px + env(safe-area-inset-bottom)) 0; 
+      gap: 10px;
+      margin-bottom: 0;
+      flex-shrink: 0;
+      background: linear-gradient(0deg, #1a1a1a 0%, #000000 100%);
+      border-top: 2px solid #FFD700; /* Golden border to match header */
+  }
 
         .styled-text {
             font-family: "Great Vibes", cursive, Arial, sans-serif;
