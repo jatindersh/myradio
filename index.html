@@ -20,11 +20,9 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/service-worker.js')
                     .then((registration) => {
-                        // Registration was successful
                         console.log('Service Worker registration successful with scope:', registration.scope);
                     })
                     .catch((error) => {
-                        // Registration failed
                         console.error('Service Worker registration failed:', error);
                     });
             });
@@ -34,6 +32,7 @@
     </script>
     
     <script>
+        // Disable right-click and view source shortcuts
         document.addEventListener("contextmenu", function(event) { event.preventDefault(); });
         document.addEventListener("keydown", function(event) {
             if (event.ctrlKey && (event.key === 'u' || event.key === 'U')) {
@@ -42,13 +41,15 @@
             }
         });
 
-        // Ensure orientation is locked
+        // Ensure orientation is locked to portrait
         window.addEventListener("load", function() {
             if (typeof AndroidApp !== 'undefined' && typeof AndroidApp.lockPortrait === 'function') {
                 AndroidApp.lockPortrait();
             }
             if (screen.orientation && screen.orientation.lock) {
-                screen.orientation.lock('portrait').catch(function(error) {});
+                screen.orientation.lock('portrait').catch(function(error) {
+                    console.log("Orientation lock not supported or permitted.");
+                });
             }
         });
     </script>
@@ -58,10 +59,11 @@
     <link rel="stylesheet" href="js/video-js.css">
     <script src="js/video.js"></script>
     <script src="js/jquery.min.js"></script>
-    <!-- Removed jQuery Marquee to fix CPU heating -->
+    <!-- Removed jQuery Marquee to fix CPU heating. Replaced with pure CSS. -->
     <script src="js/pwa.js"></script>
     <link rel="stylesheet" href="./css/button.css">
        
+    <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-11LJDT3LXX"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -88,16 +90,14 @@
       align-items: center;
       justify-content: center;
 
-      /* --- PREVENTS TEXT SELECTION ANYWHERE ON SCREEN --- */
-      -webkit-user-select: none; /* Chrome, Safari, Android */
-      -moz-user-select: none;    /* Firefox */
-      -ms-user-select: none;     /* IE/Edge */
-      user-select: none;         /* Standard syntax */
+      /* PREVENTS TEXT SELECTION ANYWHERE ON SCREEN */
+      -webkit-user-select: none; 
+      -moz-user-select: none;    
+      -ms-user-select: none;     
+      user-select: none;         
     }
 
-    /* ========================================= */
-    /* --- TOP-LEFT NATIVE 'X' EXIT BUTTON ---   */
-    /* ========================================= */
+    /* TOP-LEFT NATIVE 'X' EXIT BUTTON */
     .top-left-exit {
         position: fixed;
         top: 15px;
@@ -249,11 +249,10 @@
     #exitButton img {
       width: 90px;
       height: 30px;
+      object-fit: contain;
     }
 
-    /* ========================================= */
-    /* --- ADVANCED PWA INSTALL POPUP CSS ---    */
-    /* ========================================= */
+    /* ADVANCED PWA INSTALL POPUP CSS */
     .install-popup-overlay {
         display: none;
         position: fixed;
@@ -324,9 +323,7 @@
     #btn-cancel-install:hover { background-color: rgba(204, 255, 0, 0.1); }
     #btn-install-app:hover { background-color: #aacc00; }
 
-    /* ========================================= */
-    /* --- iOS Install Instruction Styles ---    */
-    /* ========================================= */
+    /* iOS Install Instruction Styles */
     #ios-install-instruction {
         display: none;
         position: fixed;
@@ -377,7 +374,7 @@
         <!-- Hardware Accelerated Marquee -->
         <div class="marquee-container">
             <div class="marquee-with-dr">
-                Listening to internet radio allows you to explore a world of music, news, and entertainment. You can use the Jukebox, News TV , Music Player, Live Radio Station buttons .***
+                Listening to internet radio allows you to explore a world of music, news, and entertainment. You can use the Jukebox, News TV, Music Player, Live Radio Station buttons.***
             </div>
         </div>
 
@@ -419,8 +416,8 @@
             
             <tr>
                 <td colspan="2">
-                    <!-- Existing Bottom Exit Button -->
-                    <button id="exitButton" type="button">
+                    <!-- Bottom Exit Button -->
+                    <button id="exitButton" type="button" aria-label="Exit Application">
                         <img src="image/exit.png" alt="Exit App">
                     </button>
                 </td>
@@ -449,6 +446,7 @@
     </div>
 
     <script>
+        // --- CLOCK AND DATE LOGIC ---
         function showTime() {
             let time = new Date();
             let hour = time.getHours();
@@ -460,7 +458,7 @@
                 if (hour > 12) hour -= 12;
                 am_pm = "PM";
             }
-            if (hour == 0) {
+            if (hour === 0) {
                 hour = 12;
                 am_pm = "AM";
             }
@@ -494,7 +492,7 @@
                 console.error("Window close error:", e);
             }
             
-            // 3. Fallback UI if Browser Blocks Close
+            // 3. Fallback UI if Browser Blocks Close (Standard Web Restriction)
             setTimeout(function() {
                 if (!window.closed) {
                     document.body.innerHTML = `
