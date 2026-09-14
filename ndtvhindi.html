@@ -59,39 +59,6 @@
         object-fit: contain;
     }
 
-    /* Clean Unmute Overlay */
-    #unmute-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        z-index: 10000;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background: rgba(0, 0, 0, 0.4); /* Slight darkening so the text pops */
-        color: white;
-        font-family: Arial, sans-serif;
-        font-size: 22px;
-        font-weight: bold;
-        cursor: pointer;
-        backdrop-filter: blur(2px);
-    }
-
-    .unmute-box {
-        background: rgba(255, 0, 0, 0.8);
-        padding: 15px 30px;
-        border-radius: 50px;
-        animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
-    }
-
     /* Controls positioned at the top */
     .home-btn {
         position: fixed;
@@ -108,50 +75,51 @@
         z-index: 100;
     }
 
-    /* Fallback warning if they hold phone vertically on iOS */
-    #portrait-warning {
-        display: none;
+    /* Fullscreen interaction overlay */
+    #start-overlay {
         position: fixed;
-        top: 0; left: 0; width: 100vw; height: 100vh;
-        background: black;
-        color: white;
-        z-index: 99999;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 999999;
+        display: flex;
         justify-content: center;
         align-items: center;
-        font-family: Arial, sans-serif;
-        font-size: 1.2rem;
-        text-align: center;
-        padding: 20px;
-        box-sizing: border-box;
+        cursor: pointer;
+        backdrop-filter: blur(5px);
     }
 
-    @media screen and (orientation: portrait) {
-        #portrait-warning {
-            display: flex;
-        }
-        .video-container, .home-btn, .refresh-btn, #unmute-overlay {
-            display: none;
-        }
+    .start-btn {
+        background: #e50914;
+        color: white;
+        font-family: Arial, sans-serif;
+        font-size: 24px;
+        font-weight: bold;
+        padding: 20px 40px;
+        border-radius: 50px;
+        box-shadow: 0 0 20px rgba(229, 9, 20, 0.5);
+        animation: pulse 1.5s infinite;
+        user-select: none;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
     }
 </style>
 </head>
 <body>
 
-  <!-- iOS Fallback Warning -->
-  <div id="portrait-warning">
-      <div>
-        <p style="font-size: 50px; margin: 0 0 15px 0;">🔄</p>
-        Please rotate your device sideways.
-      </div>
-  </div>
-
-  <!-- Sleek Tap-to-Unmute Screen -->
-  <div id="unmute-overlay">
-      <div class="unmute-box">Tap anywhere for sound 🔊</div>
+  <!-- Tap to Start Overlay (Required for Fullscreen API & Audio) -->
+  <div id="start-overlay">
+      <div class="start-btn">▶ Tap to Watch in Fullscreen</div>
   </div>
 
   <div class="video-container">
-    <!-- HTML5 Video Player for the .m3u8 stream. Notice 'muted' is added to allow background autoplay -->
+    <!-- HTML5 Video Player for the .m3u8 stream -->
     <video id="player" controls autoplay playsinline muted></video>
   </div>
 
@@ -188,28 +156,55 @@
             });
         }
 
-        // Unmute Logic: Waits for the user's first tap anywhere on the screen
-        document.getElementById('unmute-overlay').addEventListener('click', function() {
+        // Fullscreen & Landscape logic triggered by overlay click
+        var startOverlay = document.getElementById('start-overlay');
+
+        startOverlay.addEventListener('click', function() {
+            var docElm = document.documentElement;
+
+            // 1. Unmute and Play video
             if (video) {
                 video.muted = false; // Turn sound on
-                video.play(); // Ensure it's playing
+                video.play().catch(function(e) { console.log(e); });
             }
+
+            // 2. Request Fullscreen across all browser types
+            var requestFS = docElm.requestFullscreen || 
+                            docElm.mozRequestFullScreen || 
+                            docElm.webkitRequestFullscreen || 
+                            docElm.msRequestFullscreen;
             
-            // Hide the overlay forever
-            this.style.display = 'none';
-
-            // Optional: Force Fullscreen on that first tap to make it feel like a native app
-            let docElm = document.documentElement;
-            if (docElm.requestFullscreen) { 
-                docElm.requestFullscreen(); 
-            } else if (docElm.webkitRequestFullscreen) { 
-                docElm.webkitRequestFullscreen(); 
+            if (requestFS) {
+                // Use Promise if available to lock orientation immediately after fullscreen activates
+                var fsPromise = requestFS.call(docElm);
+                if (fsPromise !== undefined) {
+                    fsPromise.then(function() {
+                        lockLandscape();
+                    }).catch(function(err) {
+                        console.log("Fullscreen request failed: ", err);
+                        // Try locking anyway if fullscreen fails
+                        lockLandscape();
+                    });
+                } else {
+                    // Fallback for older browsers
+                    lockLandscape();
+                }
+            } else {
+                lockLandscape(); // Fallback if Fullscreen API is missing (e.g. iOS Safari)
             }
 
-            if (screen.orientation && screen.orientation.lock) {
-                screen.orientation.lock("landscape").catch(e => console.log(e));
-            }
+            // 3. Hide the overlay
+            startOverlay.style.display = 'none';
         });
+
+        // Function to lock orientation
+        function lockLandscape() {
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock("landscape").catch(function(error) {
+                    console.log("Landscape lock failed: ", error);
+                });
+            }
+        }
     });
   </script>
 </body>

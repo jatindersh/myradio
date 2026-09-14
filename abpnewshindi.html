@@ -54,7 +54,8 @@
         outline: none;
         background: black;
     }
- /* Controls positioned at the top */
+
+    /* Controls positioned at the top */
     .home-btn {
         position: fixed;
         top: 12px;
@@ -70,49 +71,114 @@
         z-index: 100;
     }
 
-    /* Fallback warning if they hold phone vertically on iOS */
-    #portrait-warning {
-        display: none;
+    /* Fullscreen interaction overlay */
+    #start-overlay {
         position: fixed;
-        top: 0; left: 0; width: 100vw; height: 100vh;
-        background: black;
-        color: white;
-        z-index: 99999;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 999999;
+        display: flex;
         justify-content: center;
         align-items: center;
-        font-family: Arial, sans-serif;
-        font-size: 1.2rem;
-        text-align: center;
-        padding: 20px;
-        box-sizing: border-box;
+        cursor: pointer;
+        backdrop-filter: blur(5px);
     }
 
-    @media screen and (orientation: portrait) {
-        #portrait-warning { display: flex; }
-        .video-container, .home-btn, .refresh-btn { display: none; }
+    .start-btn {
+        background: #e50914;
+        color: white;
+        font-family: Arial, sans-serif;
+        font-size: 24px;
+        font-weight: bold;
+        padding: 20px 40px;
+        border-radius: 50px;
+        box-shadow: 0 0 20px rgba(229, 9, 20, 0.5);
+        animation: pulse 1.5s infinite;
+        user-select: none;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
     }
 </style>
 </head>
 <body>
 
-  <!-- iOS Fallback Warning -->
-  <div id="portrait-warning">
-      <div>
-        <p style="font-size: 50px; margin: 0 0 15px 0;">🔄</p>
-        Please rotate your device sideways.
-      </div>
+  <!-- Tap to Start Overlay (Required for Fullscreen API & Audio bypass) -->
+  <div id="start-overlay">
+      <div class="start-btn">▶ Tap to Watch in Fullscreen</div>
   </div>
 
+  <!-- Top Controls -->
+  <img src="image/refresh.jpg" alt="Reload" id="refreshButton" onclick="location.reload();" width="60" height="60" class="refresh-btn">
+  
+  <a href="tvtvnews.html" class="home-btn">
+    <img src="image/home.png" alt="Back To Home" width="60" height="60">
+  </a>
+
   <div class="video-container">
-    <!-- ABP News iframe loaded immediately. Autoplay and mute parameters added natively. -->
+    <!-- ABP News iframe loaded immediately. Initial state is muted to allow background loading. -->
     <iframe id="player" src="https://cdn.abplive.com/LiveStreams/abp_live_tv/hindi/live-tv.html?autoplay=1&mute=1" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
   </div>
 
-  <img src="image/refresh.jpg" alt="Reload" id="refreshButton" onclick="location.reload();" width="70" height="70" class="refresh-btn">
-  
-  <a href="tvtvnews.html" class="home-btn">
-    <img src="image/home.png" alt="Back To Home" width="65" height="65">
-  </a>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var startOverlay = document.getElementById('start-overlay');
+        var iframe = document.getElementById('player');
+
+        // Capture user tap to bypass browser autoplay/sound restrictions and enter fullscreen
+        startOverlay.addEventListener('click', function() {
+            var docElm = document.documentElement;
+
+            // 1. Re-assign src to trigger clean autoplay within the iframe after user interaction
+            // Automatically switch "mute=1" to "mute=0" to turn on sound
+            var currentSrc = iframe.src;
+            iframe.src = currentSrc.replace('mute=1', 'mute=0');
+
+            // 2. Request Fullscreen across all browser types
+            var requestFS = docElm.requestFullscreen || 
+                            docElm.mozRequestFullScreen || 
+                            docElm.webkitRequestFullscreen || 
+                            docElm.msRequestFullscreen;
+            
+            if (requestFS) {
+                // Use Promise if available to lock orientation immediately after fullscreen activates
+                var fsPromise = requestFS.call(docElm);
+                if (fsPromise !== undefined) {
+                    fsPromise.then(function() {
+                        lockLandscape();
+                    }).catch(function(err) {
+                        console.log("Fullscreen request failed: ", err);
+                        // Try locking anyway if fullscreen fails
+                        lockLandscape();
+                    });
+                } else {
+                    // Fallback for older browsers
+                    lockLandscape();
+                }
+            } else {
+                lockLandscape(); // Fallback if Fullscreen API is missing (e.g. iOS Safari)
+            }
+
+            // 3. Remove overlay so player controls become interactable
+            startOverlay.style.display = 'none';
+        });
+
+        // Function to lock orientation
+        function lockLandscape() {
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock("landscape").catch(function(error) {
+                    console.log("Landscape lock failed: ", error);
+                });
+            }
+        }
+    });
+  </script>
 
 </body>
 </html>
