@@ -53,7 +53,7 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.8);
             width: 95vw;
             max-width: 600px;
-            height: 90vh; 
+            height: auto; /* Changed from 90vh to auto for snug fit */
             margin: 0 auto;
             border-collapse: separate;
             border-spacing: 0; 
@@ -65,13 +65,14 @@
         #rcorners4 td {
             padding: 0;
             vertical-align: top;
-            height: 100%;
+            height: auto;
         }
 
         .radio-wrapper {
             display: flex; 
             width: 100%;
-            height: 100%;
+            height: auto;
+            padding-bottom: 25px; /* Added bottom padding to replace the space of the removed bottom bar */
             flex-direction: column;
             background-color: transparent; 
         }
@@ -296,26 +297,6 @@
             animation: spin 1.5s infinite linear;
         }
 
-        .bottom-bar {
-            flex-shrink: 0; display: flex; justify-content: center; gap: 60px; align-items: center;     
-            padding: 10px 20px; background-color: transparent; border-top: 1px solid #1a1a1a;
-            padding-bottom: env(safe-area-inset-bottom, 15px);
-        }
-
-        .minimize-btn {
-            background-color: #373b44; color: #ffffff; border: 1px solid #444; padding: 8px 20px; border-radius: 25px;
-            font-size: 13px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 6px;
-        }
-        .minimize-btn:hover { background-color: #1f3b1f; border-color: #44aa44; color: #44aa44; }
-        .minimize-btn:active { transform: scale(0.95); }
-
-        .exit-btn {
-            background-color: #373b44; color: #ffffff; border: 1px solid #444; padding: 8px 20px; border-radius: 25px;
-            font-size: 13px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 6px;
-        }
-        .exit-btn:hover { background-color: #5c1818; border-color: #ff4444; color: #ff4444; }
-        .exit-btn:active { transform: scale(0.95); }
-
         #audio-player { display: none; }
         #iframe-player { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; border: none; }
     </style>
@@ -371,15 +352,6 @@
 
                     <audio id="audio-player" playsinline preload="auto"></audio>
                     <iframe id="iframe-player" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-
-                    <div class="bottom-bar">
-                       <button class="minimize-btn" id="minimizeAppBtn" aria-label="Minimize Application">
-                           <span style="color: #44aa44; font-size: 16px; line-height: 1;">_</span> <span>MIN</span>
-                       </button>
-                       <button class="exit-btn" id="exitAppBtn" aria-label="Exit Application">
-                            <span id="exitIcon" style="color: #ff4444; font-size: 14px;">✖</span> <span>EXIT</span>
-                        </button>
-                    </div>
                     
                 </div>
             </td>
@@ -565,18 +537,6 @@
             });
             document.getElementById('rhomeBtn').addEventListener('click', function() {
                 this.querySelector('.home-img').style.animation = 'spin 1s linear infinite'; setTimeout(() => { window.location.href = "index.html"; }, 500);
-            });
-
-            // TRIGGER NATIVE PiP
-            document.getElementById('minimizeAppBtn').addEventListener('click', () => {
-                if (typeof AndroidApp !== 'undefined' && typeof AndroidApp.minimizeApp === 'function') {
-                    AndroidApp.minimizeApp();
-                }
-            });
-
-            document.getElementById('exitAppBtn').addEventListener('click', () => {
-                if (typeof AndroidApp !== 'undefined' && typeof AndroidApp.exitApp === 'function') { AndroidApp.exitApp(); } 
-                else { window.close(); }
             });
 
             renderPlaylist();
