@@ -52,7 +52,8 @@
         max-height: 100%;
         border: none;
     }
- /* Controls positioned at the top */
+
+    /* Controls positioned at the top */
     .home-btn {
         position: fixed;
         top: 12px;
@@ -67,43 +68,9 @@
         cursor: pointer;
         z-index: 100;
     }
-
-    /* Fallback warning if they hold phone vertically on iOS */
-    #portrait-warning {
-        display: none;
-        position: fixed;
-        top: 0; left: 0; width: 100vw; height: 100vh;
-        background: black;
-        color: white;
-        z-index: 9999;
-        justify-content: center;
-        align-items: center;
-        font-family: Arial, sans-serif;
-        font-size: 1.2rem;
-        text-align: center;
-        padding: 20px;
-        box-sizing: border-box;
-    }
-
-    @media screen and (orientation: portrait) {
-        #portrait-warning {
-            display: flex;
-        }
-        .video-container, .home-btn, .refresh-btn {
-            display: none;
-        }
-    }
 </style>
 </head>
 <body>
-
-  <!-- iOS Fallback Warning -->
-  <div id="portrait-warning">
-      <div>
-        <p style="font-size: 50px; margin: 0 0 15px 0;">🔄</p>
-        Please rotate your device sideways.
-      </div>
-  </div>
 
   <div class="video-container">
     <!-- Stream loaded directly with autoplay and unmuted parameters -->
