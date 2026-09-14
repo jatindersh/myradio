@@ -6,6 +6,7 @@
 <title>Zee News Live TV Hindi</title>
 <script>
     // Tell the Android App to unlock the screen and allow rotation
+    // (If you have a native lock function in your app, call it here, e.g., AndroidApp.lockLandscape())
     if (typeof AndroidApp !== 'undefined' && typeof AndroidApp.unlockOrientation === 'function') {
         AndroidApp.unlockOrientation();
     }
@@ -87,6 +88,18 @@
   <a href="tvtvnews.html" class="home-btn">
     <img src="image/home.png" alt="Back To Home" width="65" height="65">
   </a>
+
+  <!-- Script to force landscape mode -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Attempt to lock the web browser to landscape mode
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock("landscape").catch(function(error) {
+                console.log("Landscape lock failed (Browser may require fullscreen or user interaction first): ", error);
+            });
+        }
+    });
+  </script>
 
 </body>
 </html>
