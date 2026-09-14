@@ -371,16 +371,7 @@
 
                     <audio id="audio-player" playsinline preload="auto"></audio>
                     <iframe id="iframe-player" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-
-                    <div class="bottom-bar">
-                       <button class="minimize-btn" id="minimizeAppBtn" aria-label="Minimize Application">
-                           <span style="color: #44aa44; font-size: 16px; line-height: 1;">_</span> <span>MIN</span>
-                       </button>
-                       <button class="exit-btn" id="exitAppBtn" aria-label="Exit Application">
-                            <span id="exitIcon" style="color: #ff4444; font-size: 14px;">✖</span> <span>EXIT</span>
-                        </button>
-                    </div>
-                    
+                   
                 </div>
             </td>
         </tr>
@@ -564,7 +555,7 @@
                 this.querySelector('.refresh-img').style.animation = 'spin 1s linear infinite'; setTimeout(() => { window.location.reload(); }, 500);
             });
             document.getElementById('rhomeBtn').addEventListener('click', function() {
-                this.querySelector('.home-img').style.animation = 'spin 1s linear infinite'; setTimeout(() => { window.location.href = "tvhome.html"; }, 500);
+                this.querySelector('.home-img').style.animation = 'spin 1s linear infinite'; setTimeout(() => { window.location.href = "index.html"; }, 500);
             });
 
             // TRIGGER NATIVE PiP
