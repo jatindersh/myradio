@@ -3,16 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Republic Bharat Live TV</title>
-
-<!-- HLS.js Library for cross-browser stream support -->
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<title>Republic Bharat Live TV Hindi</title>
 <script>
-    // Tell the Android App to unlock the screen and allow rotation
+    // Unlock orientation for Android WebViews
     if (typeof AndroidApp !== 'undefined' && typeof AndroidApp.unlockOrientation === 'function') {
         AndroidApp.unlockOrientation();
     }
 </script>
+
 <script>
     // Disable right-click
     document.addEventListener("contextmenu", function(event) {
@@ -47,71 +45,75 @@
         background: #000;
     }
 
-    /* HTML5 Video Tag for HLS Stream */
+    /* Embedded iframe for YuppTV player */
     #player {
         width: 100%;
         height: 100%;
-        max-width: 100%;
-        max-height: 100%;
         border: none;
         outline: none;
         background: black;
-        object-fit: contain;
     }
 
-    /* Clean Unmute Overlay */
+    /* Controls positioned at the top */
+    .home-btn {
+        position: fixed;
+        top: 12px;
+        right: 12px;
+        z-index: 100;
+    }
+
+    .refresh-btn {
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        cursor: pointer;
+        z-index: 100;
+    }
+
+    /* Interactive Unmute / Tap to Play Overlay */
     #unmute-overlay {
         position: fixed;
         top: 0;
         left: 0;
         width: 100vw;
         height: 100vh;
-        z-index: 10000;
+        z-index: 9999;
         display: flex;
         justify-content: center;
         align-items: center;
-        background: rgba(0, 0, 0, 0.4); /* Slight darkening so the text pops */
+        background: rgba(0, 0, 0, 0.65);
         color: white;
         font-family: Arial, sans-serif;
         font-size: 22px;
         font-weight: bold;
         cursor: pointer;
-        backdrop-filter: blur(2px);
+        backdrop-filter: blur(3px);
     }
 
     .unmute-box {
-        background: rgba(255, 0, 0, 0.8);
-        padding: 15px 30px;
+        background: #e50914;
+        color: #ffffff;
+        padding: 16px 32px;
         border-radius: 50px;
-        animation: pulse 2s infinite;
+        box-shadow: 0 0 20px rgba(229, 9, 20, 0.7);
+        animation: pulse 1.8s infinite;
+        user-select: none;
     }
 
     @keyframes pulse {
         0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
+        50% { transform: scale(1.06); }
         100% { transform: scale(1); }
     }
 
-    .home-btn {
-      position: fixed;
-      bottom: 10px;
-      right: 10px;
-      z-index: 10;
-    }
-
-    .refresh-btn {
-      position: fixed;
-      bottom: 10px;
-      left: 10px;
-      cursor: pointer;
-      z-index: 10;
-    }
-
-    /* Fallback warning if they hold phone vertically on iOS */
+    /* Fallback warning for portrait mode */
     #portrait-warning {
         display: none;
         position: fixed;
-        top: 0; left: 0; width: 100vw; height: 100vh;
+        top: 0; 
+        left: 0; 
+        width: 100vw; 
+        height: 100vh;
         background: black;
         color: white;
         z-index: 99999;
@@ -136,7 +138,7 @@
 </head>
 <body>
 
-  <!-- iOS Fallback Warning -->
+  <!-- Orientation Fallback Warning -->
   <div id="portrait-warning">
       <div>
         <p style="font-size: 50px; margin: 0 0 15px 0;">🔄</p>
@@ -144,70 +146,55 @@
       </div>
   </div>
 
-  <!-- Sleek Tap-to-Unmute Screen -->
+  <!-- Sound Permission Overlay -->
   <div id="unmute-overlay">
-      <div class="unmute-box">Tap anywhere for sound 🔊</div>
+      <div class="unmute-box">🔊 Tap Here to Turn On Sound</div>
   </div>
 
-  <div class="video-container">
-    <!-- HTML5 Video Player for the .m3u8 stream. Notice 'muted' is added to allow background autoplay -->
-    <video id="player" controls autoplay playsinline muted></video>
-  </div>
-
+  <!-- Top Controls -->
   <img src="image/refresh.jpg" alt="Reload" id="refreshButton"
-       onclick="location.reload();" width="70" height="70" class="refresh-btn">
+       onclick="location.reload();" width="60" height="60" class="refresh-btn">
 
   <a href="tvtvnews.html" class="home-btn">
-    <img src="image/home.png" alt="Back To Home" width="65" height="65">
+    <img src="image/home.png" alt="Back To Home" width="60" height="60">
   </a>
+
+  <!-- Main Player Stream -->
+  <div class="video-container">
+    <iframe 
+        id="player" 
+        src="https://www.yupptv.com/channels/republic-bharat/live/embed" 
+        allow="autoplay; fullscreen; encrypted-media" 
+        allowfullscreen>
+    </iframe>
+  </div>
 
   <script>
     document.addEventListener("DOMContentLoaded", function() {
-        var video = document.getElementById('player');
-        // Republic Bharat Live Stream URL
-        var videoSrc = "https://vg-republictvlive.akamaized.net/v1/master/611d79b11b77e2f571934fd80ca1413453772ac7/vglive-sk-275673/main.m3u8?ads.partner=republicweb";
+        var overlay = document.getElementById('unmute-overlay');
+        var iframe = document.getElementById('player');
 
-        // Play the HLS Stream safely using the HLS.js library
-        if (Hls.isSupported()) {
-            var hls = new Hls();
-            hls.loadSource(videoSrc);
-            hls.attachMedia(video);
-            hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                video.play().catch(function(error) {
-                    console.log("Autoplay blocked, waiting for interaction");
-                });
-            });
-        } 
-        // Fallback for native HLS support (like Safari and iOS)
-        else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            video.src = videoSrc;
-            video.addEventListener('loadedmetadata', function() {
-                video.play().catch(function(error) {
-                    console.log("Autoplay blocked, waiting for interaction");
-                });
-            });
-        }
+        // Capture user tap to bypass browser autoplay/sound restrictions
+        overlay.addEventListener('click', function() {
+            // Re-assign src to trigger clean autoplay within the iframe after user interaction
+            var currentSrc = iframe.src;
+            iframe.src = currentSrc;
 
-        // Unmute Logic: Waits for the user's first tap anywhere on the screen
-        document.getElementById('unmute-overlay').addEventListener('click', function() {
-            if (video) {
-                video.muted = false; // Turn sound on
-                video.play(); // Ensure it's playing
-            }
-            
-            // Hide the overlay forever
-            this.style.display = 'none';
+            // Remove overlay so player controls become interactable
+            overlay.style.display = 'none';
 
-            // Optional: Force Fullscreen on that first tap to make it feel like a native app
-            let docElm = document.documentElement;
+            // Enable fullscreen and landscape lock
+            var docElm = document.documentElement;
             if (docElm.requestFullscreen) { 
-                docElm.requestFullscreen(); 
+                docElm.requestFullscreen().catch(function(){}); 
             } else if (docElm.webkitRequestFullscreen) { 
-                docElm.webkitRequestFullscreen(); 
+                docElm.webkitRequestFullscreen().catch(function(){}); 
             }
 
             if (screen.orientation && screen.orientation.lock) {
-                screen.orientation.lock("landscape").catch(e => console.log(e));
+                screen.orientation.lock("landscape").catch(function(e) {
+                    console.log("Orientation lock not permitted: ", e);
+                });
             }
         });
     });
