@@ -6,7 +6,6 @@
 <title>Zee News Live TV Hindi</title>
 <script>
     // Tell the Android App to unlock the screen and allow rotation
-    // (If you have a native lock function in your app, call it here, e.g., AndroidApp.lockLandscape())
     if (typeof AndroidApp !== 'undefined' && typeof AndroidApp.unlockOrientation === 'function') {
         AndroidApp.unlockOrientation();
     }
@@ -69,12 +68,51 @@
         cursor: pointer;
         z-index: 100;
     }
+
+    /* Fullscreen interaction overlay */
+    #start-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        backdrop-filter: blur(5px);
+    }
+
+    .start-btn {
+        background: #e50914;
+        color: white;
+        font-family: Arial, sans-serif;
+        font-size: 24px;
+        font-weight: bold;
+        padding: 20px 40px;
+        border-radius: 50px;
+        box-shadow: 0 0 20px rgba(229, 9, 20, 0.5);
+        animation: pulse 1.5s infinite;
+        user-select: none;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
 </style>
 </head>
 <body>
 
+  <!-- Tap to Start Overlay (Required for Fullscreen API) -->
+  <div id="start-overlay">
+      <div class="start-btn">▶ Tap to Watch in Fullscreen</div>
+  </div>
+
   <div class="video-container">
-    <!-- Stream loaded directly with autoplay and unmuted parameters -->
     <iframe id="player" 
             src="https://zeenews.india.com/hindi/news/live-tv?videoId=183&taptounmute=0&mute=0&piv=1&pip=0&autoplay=1" 
             allow="autoplay; encrypted-media; fullscreen" 
@@ -89,14 +127,50 @@
     <img src="image/home.png" alt="Back To Home" width="65" height="65">
   </a>
 
-  <!-- Script to force landscape mode -->
+  <!-- Script to force Fullscreen and Landscape mode on tap -->
   <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Attempt to lock the web browser to landscape mode
-        if (screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock("landscape").catch(function(error) {
-                console.log("Landscape lock failed (Browser may require fullscreen or user interaction first): ", error);
-            });
+        var startOverlay = document.getElementById('start-overlay');
+
+        startOverlay.addEventListener('click', function() {
+            var docElm = document.documentElement;
+
+            // 1. Request Fullscreen across all browser types
+            var requestFS = docElm.requestFullscreen || 
+                            docElm.mozRequestFullScreen || 
+                            docElm.webkitRequestFullscreen || 
+                            docElm.msRequestFullscreen;
+            
+            if (requestFS) {
+                // Use Promise if available to lock orientation immediately after fullscreen activates
+                var fsPromise = requestFS.call(docElm);
+                if (fsPromise !== undefined) {
+                    fsPromise.then(function() {
+                        lockLandscape();
+                    }).catch(function(err) {
+                        console.log("Fullscreen request failed: ", err);
+                        // Try locking anyway if fullscreen fails
+                        lockLandscape();
+                    });
+                } else {
+                    // Fallback for older browsers
+                    lockLandscape();
+                }
+            } else {
+                lockLandscape(); // Fallback if Fullscreen API is missing (e.g. iOS Safari)
+            }
+
+            // 2. Hide the overlay
+            startOverlay.style.display = 'none';
+        });
+
+        // Function to lock orientation
+        function lockLandscape() {
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock("landscape").catch(function(error) {
+                    console.log("Landscape lock failed: ", error);
+                });
+            }
         }
     });
   </script>
