@@ -107,16 +107,16 @@
 </head>
 <body>
 
-  <!-- Tap to Start Overlay (Required for Fullscreen API and Autoplay) -->
+  <!-- Tap to Start Overlay -->
   <div id="start-overlay">
       <div class="start-btn">▶ Tap to Watch in Fullscreen</div>
   </div>
 
   <div class="video-container">
-    <!-- The src attribute is intentionally left empty. The JavaScript will fill it when the user taps. -->
+    <!-- The src attribute is intentionally empty -->
     <iframe id="player" 
             src="" 
-            allow="autoplay; encrypted-media; fullscreen" 
+            allow="autoplay; encrypted-media; fullscreen; picture-in-picture" 
             allowfullscreen>
     </iframe>
   </div>
@@ -128,7 +128,7 @@
     <img src="image/home.jpg" alt="Back To Home" width="65" height="65">
   </a>
 
-  <!-- Script to force Fullscreen, Landscape mode, and load the video -->
+  <!-- Script to force Fullscreen, Landscape mode, and safely load the video -->
   <script>
     document.addEventListener("DOMContentLoaded", function() {
         var startOverlay = document.getElementById('start-overlay');
@@ -137,37 +137,36 @@
         startOverlay.addEventListener('click', function() {
             var docElm = document.documentElement;
 
-            // 1. Inject the video URL ONLY after the user taps the screen
-            // This prevents the browser from blocking the autoplay/sound
-            playerIframe.src = "https://zeenews.india.com/hindi/news/live-tv?videoId=183&taptounmute=0&mute=0&piv=1&pip=0&autoplay=1";
-
-            // 2. Request Fullscreen across all browser types
+            // 1. Request Fullscreen FIRST
             var requestFS = docElm.requestFullscreen || 
                             docElm.mozRequestFullScreen || 
                             docElm.webkitRequestFullscreen || 
                             docElm.msRequestFullscreen;
             
             if (requestFS) {
-                // Use Promise if available to lock orientation immediately after fullscreen activates
                 var fsPromise = requestFS.call(docElm);
                 if (fsPromise !== undefined) {
                     fsPromise.then(function() {
                         lockLandscape();
                     }).catch(function(err) {
                         console.log("Fullscreen request failed: ", err);
-                        // Try locking anyway if fullscreen fails
                         lockLandscape();
                     });
                 } else {
-                    // Fallback for older browsers
                     lockLandscape();
                 }
             } else {
-                lockLandscape(); // Fallback if Fullscreen API is missing (e.g., iOS Safari)
+                lockLandscape(); 
             }
 
-            // 3. Hide the overlay
+            // 2. Hide the overlay instantly
             startOverlay.style.display = 'none';
+
+            // 3. WAIT 800 milliseconds for the screen to finish rotating/expanding, 
+            // THEN load the video so the player doesn't crash.
+            setTimeout(function() {
+                playerIframe.src = "https://zeenews.india.com/hindi/news/live-tv?videoId=183&taptounmute=0&mute=0&piv=1&pip=0&autoplay=1";
+            }, 800);
         });
 
         // Function to lock orientation
