@@ -107,14 +107,15 @@
 </head>
 <body>
 
-  <!-- Tap to Start Overlay (Required for Fullscreen API) -->
+  <!-- Tap to Start Overlay (Required for Fullscreen API and Autoplay) -->
   <div id="start-overlay">
       <div class="start-btn">▶ Tap to Watch in Fullscreen</div>
   </div>
 
   <div class="video-container">
+    <!-- The src attribute is intentionally left empty. The JavaScript will fill it when the user taps. -->
     <iframe id="player" 
-            src="https://zeenews.india.com/hindi/news/live-tv?videoId=183&taptounmute=0&mute=0&piv=1&pip=0&autoplay=1" 
+            src="" 
             allow="autoplay; encrypted-media; fullscreen" 
             allowfullscreen>
     </iframe>
@@ -127,15 +128,20 @@
     <img src="image/home.jpg" alt="Back To Home" width="65" height="65">
   </a>
 
-  <!-- Script to force Fullscreen and Landscape mode on tap -->
+  <!-- Script to force Fullscreen, Landscape mode, and load the video -->
   <script>
     document.addEventListener("DOMContentLoaded", function() {
         var startOverlay = document.getElementById('start-overlay');
+        var playerIframe = document.getElementById('player');
 
         startOverlay.addEventListener('click', function() {
             var docElm = document.documentElement;
 
-            // 1. Request Fullscreen across all browser types
+            // 1. Inject the video URL ONLY after the user taps the screen
+            // This prevents the browser from blocking the autoplay/sound
+            playerIframe.src = "https://zeenews.india.com/hindi/news/live-tv?videoId=183&taptounmute=0&mute=0&piv=1&pip=0&autoplay=1";
+
+            // 2. Request Fullscreen across all browser types
             var requestFS = docElm.requestFullscreen || 
                             docElm.mozRequestFullScreen || 
                             docElm.webkitRequestFullscreen || 
@@ -157,10 +163,10 @@
                     lockLandscape();
                 }
             } else {
-                lockLandscape(); // Fallback if Fullscreen API is missing (e.g. iOS Safari)
+                lockLandscape(); // Fallback if Fullscreen API is missing (e.g., iOS Safari)
             }
 
-            // 2. Hide the overlay
+            // 3. Hide the overlay
             startOverlay.style.display = 'none';
         });
 
