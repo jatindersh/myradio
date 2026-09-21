@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Sony Entertainment Television</title>
+<title>Viasat Explore Classic</title>
 
 <!-- HLS.js Library for playing m3u8 streams in the browser -->
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
@@ -131,17 +131,11 @@
 
   <!-- Script to force Fullscreen, Landscape mode, and handle HLS fallback logic -->
   <script>
-    // Direct links first for maximum speed, followed by proxied fallbacks
+    // Direct link first for maximum speed, followed by proxied fallbacks
     const streamUrls = [
-        "https://cloudplay-sonyliv.pages.dev/sethd.m3u8",
-        "https://sl.vodep39240327.workers.dev/channel/SET%20HD.m3u8",
-        "http://38.96.178.205/SONYHD/index.m3u8",
-        "http://tvsen5.aynascope.net/Wfn4bVp3dLgA/index.m3u8",
-        "http://stb-air.wasmer.app/play.php?id=LIVETV_LIVETVCHANNEL_SET_HD&uid=gana-sunega&pass=krish-ka",
-        "https://srv1.pxfy.dev/?url=https%3A%2F%2Fcloudplay-sonyliv.pages.dev%2Fsethd.m3u8&exp=1790055893&sig=367dcaf71b97c8930f696652052771d7c94ac94278b58bd95bbbf713d5e54fe6",
-        "https://srv1.pxfy.dev/?url=https%3A%2F%2Fsl.vodep39240327.workers.dev%2Fchannel%2FSET%2520HD.m3u8&exp=1790055893&sig=aa8f3243f277022fb76de33480ba8d0a6afb8ad28df019c3dd103141166ebd68",
-        "https://srv1.pxfy.dev/?url=http%3A%2F%2F38.96.178.205%2FSONYHD%2Findex.m3u8&exp=1790055893&sig=a3d2100fcc91a4bd9df40e6587495a8202a10d87c49a667ccfb919dc030f4ede",
-        "https://srv3.pxfy.dev/?url=http%3A%2F%2Ftvsen5.aynascope.net%2FWfn4bVp3dLgA%2Findex.m3u8&exp=1790055893&sig=cc66efd81747ea8d029a5e7a2f56b2d68467a571598a3cec0f78cb6d05fc288f"
+        "https://da9c49fa.wurl.com/master/f36d25e7e52f1ba8d7e56eb859c636563214f541/UmFrdXRlblRWLXBsX1ZpYXNhdEV4cGxvcmVfSExT/playlist.m3u8",
+        "https://srv3.pxfy.dev/?url=https%3A%2F%2Fda9c49fa.wurl.com%2Fmaster%2Ff36d25e7e52f1ba8d7e56eb859c636563214f541%2FUmFrdXRlblRWLXBsX1ZpYXNhdEV4cGxvcmVfSExT%2Fplaylist.m3u8&exp=1790056317&sig=4840de140c189028ad25b855515893ebfb2fed15471727857f8ad8842cc4ebf7",
+        "https://srv1.pxfy.dev/?url=https%3A%2F%2Fda9c49fa.wurl.com%2Fmaster%2Ff36d25e7e52f1ba8d7e56eb859c636563214f541%2FUmFrdXRlblRWLXBsX1ZpYXNhdEV4cGxvcmVfSExT%2Fplaylist.m3u8&exp=1790056317&sig=4840de140c189028ad25b855515893ebfb2fed15471727857f8ad8842cc4ebf7"
     ];
 
     let currentStreamIndex = 0;
