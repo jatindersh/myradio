@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Xplore Live TV</title>
+
+<!-- HLS.js Library for playing m3u8 streams in the browser -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+<script>
+    // Tell the Android App to unlock the screen and allow rotation
+    if (typeof AndroidApp !== 'undefined' && typeof AndroidApp.unlockOrientation === 'function') {
+        AndroidApp.unlockOrientation();
+    }
+</script>
+<script>
+    // Disable right-click
+    document.addEventListener("contextmenu", function(event) {
+        event.preventDefault();
+    });
+ 
+    // Block Ctrl+U
+    document.addEventListener("keydown", function(event) {
+        if (event.ctrlKey && (event.key === 'u' || event.key === 'U')) {
+            event.preventDefault();
+            alert("Viewing source is disabled!");
+        }
+    });
+</script>
+
+<style>
+    body {
+        text-align: center;
+        background-color: black;
+        color: white;
+        margin: 0;
+        padding: 0;
+        overflow: hidden; 
+    }
+
+    .video-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100vw;
+        height: 100vh;
+        background: #000;
+    }
+
+    /* Standard Video styling */
+    #player {
+        width: 100%;
+        height: 100%;
+        max-width: 100%;
+        max-height: 100%;
+        background-color: black;
+        object-fit: contain;
+    }
+
+    /* Controls positioned at the top */
+    .home-btn {
+        position: fixed;
+        top: 12px;
+        right: 12px;
+        z-index: 100;
+    }
+
+    .refresh-btn {
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        cursor: pointer;
+        z-index: 100;
+    }
+
+    /* Fullscreen interaction overlay */
+    #start-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        backdrop-filter: blur(5px);
+    }
+
+    .start-btn {
+        background: #e50914;
+        color: white;
+        font-family: Arial, sans-serif;
+        font-size: 24px;
+        font-weight: bold;
+        padding: 20px 40px;
+        border-radius: 50px;
+        box-shadow: 0 0 20px rgba(229, 9, 20, 0.5);
+        animation: pulse 1.5s infinite;
+        user-select: none;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+</style>
+</head>
+<body>
+
+  <!-- Tap to Start Overlay -->
+  <div id="start-overlay">
+      <div class="start-btn">▶ Tap to Watch in Fullscreen</div>
+  </div>
+
+  <div class="video-container">
+      <!-- HTML5 video tag to play m3u8 using HLS.js -->
+      <video id="player" controls playsinline></video>
+  </div>
+
+  <!-- Top Buttons -->
+  <img src="image/refresh.png" alt="Reload" id="refreshButton"
+       onclick="location.reload();" width="70" height="70" class="refresh-btn">
+
+  <a href="tvtvnews.html" class="home-btn">
+    <img src="image/home.jpg" alt="Back To Home" width="65" height="65">
+  </a>
+
+  <!-- Script to force Fullscreen, Landscape mode, and handle HLS fallback logic -->
+  <script>
+    // Array of all Xplore backup streams
+    const streamUrls = [
+        "https://srv1.pxfy.dev/?url=https%3A%2F%2Fjmp2.uk%2Fstvp-INBA4900023QJ&exp=1790054012&sig=b9f566ea27425b2b33f569792e18007bcc90cd50982b7a5b67a73e913f077a6a",
+        "https://srv3.pxfy.dev/?url=https%3A%2F%2Fjmp2.uk%2Fstvp-INBA4900023QJ&exp=1790054012&sig=b9f566ea27425b2b33f569792e18007bcc90cd50982b7a5b67a73e913f077a6a",
+        "https://jmp2.uk/stvp-INBA4900023QJ" // Raw unproxied fallback
+    ];
+
+    let currentStreamIndex = 0;
+    let hls;
+
+    document.addEventListener("DOMContentLoaded", function() {
+        var startOverlay = document.getElementById('start-overlay');
+        var videoElement = document.getElementById('player');
+
+        // Function to load and play the stream with fallback logic
+        function loadStream() {
+            if (currentStreamIndex >= streamUrls.length) {
+                alert("All server links are currently down. Please try again later.");
+                return;
+            }
+
+            var currentUrl = streamUrls[currentStreamIndex];
+            console.log("Attempting to play stream:", currentUrl);
+
+            // Check if HLS.js is supported (Most modern browsers)
+            if (Hls.isSupported()) {
+                if (hls) { hls.destroy(); } // Destroy previous instance if it exists
+                
+                hls = new Hls({
+                    maxMaxBufferLength: 30, // Prevent infinite buffering loops on dead streams
+                });
+                
+                hls.loadSource(currentUrl);
+                hls.attachMedia(videoElement);
+                
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    videoElement.play().catch(e => console.log("Playback prevented by browser: ", e));
+                });
+
+                // Error handling: if a fatal error occurs, try the next URL
+                hls.on(Hls.Events.ERROR, function(event, data) {
+                    if (data.fatal) {
+                        console.warn("Fatal error on stream " + currentStreamIndex + ". Switching to backup...");
+                        currentStreamIndex++;
+                        loadStream(); // Recursive call to next URL
+                    }
+                });
+
+            } 
+            // Native HLS support fallback (e.g., Safari on iOS)
+            else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+                videoElement.src = currentUrl;
+                videoElement.addEventListener('loadedmetadata', function() {
+                    videoElement.play();
+                });
+                videoElement.addEventListener('error', function() {
+                    console.warn("Native playback error. Switching to backup...");
+                    currentStreamIndex++;
+                    loadStream();
+                }, { once: true }); // Ensure event listener doesn't stack
+            }
+        }
+
+        startOverlay.addEventListener('click', function() {
+            var docElm = document.documentElement;
+
+            // 1. Request Fullscreen FIRST
+            var requestFS = docElm.requestFullscreen || 
+                            docElm.mozRequestFullScreen || 
+                            docElm.webkitRequestFullscreen || 
+                            docElm.msRequestFullscreen;
+            
+            if (requestFS) {
+                var fsPromise = requestFS.call(docElm);
+                if (fsPromise !== undefined) {
+                    fsPromise.then(function() {
+                        lockLandscape();
+                    }).catch(function(err) {
+                        console.log("Fullscreen request failed: ", err);
+                        lockLandscape();
+                    });
+                } else {
+                    lockLandscape();
+                }
+            } else {
+                lockLandscape(); 
+            }
+
+            // 2. Hide the overlay instantly
+            startOverlay.style.display = 'none';
+
+            // 3. WAIT 800 milliseconds for the screen to finish rotating/expanding, 
+            // THEN execute the multi-stream HLS loader.
+            setTimeout(function() {
+                loadStream();
+            }, 800);
+        });
+
+        // Function to lock orientation
+        function lockLandscape() {
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock("landscape").catch(function(error) {
+                    console.log("Landscape lock failed: ", error);
+                });
+            }
+        }
+    });
+  </script>
+
+</body>
+</html>
