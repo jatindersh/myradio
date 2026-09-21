@@ -118,7 +118,6 @@
   </div>
 
   <div class="video-container">
-      <!-- HTML5 video tag to play m3u8 using HLS.js -->
       <video id="player" controls playsinline></video>
   </div>
 
@@ -132,22 +131,21 @@
 
   <!-- Script to force Fullscreen, Landscape mode, and handle HLS fallback logic -->
   <script>
-    // Array of ALL Extracted Xplore / Explore Backup Streams
+    // REORDERED: Direct CDN links put first, slow proxies pushed to the bottom.
     const streamUrls = [
-        "https://jmp2.uk/stvp-INBA4900023QJ", // Xplore India (Direct)
-        "https://srv1.pxfy.dev/?url=https%3A%2F%2Fjmp2.uk%2Fstvp-INBA4900023QJ&exp=1790054012&sig=b9f566ea27425b2b33f569792e18007bcc90cd50982b7a5b67a73e913f077a6a", // Xplore India (Proxy 1)
-        "https://srv3.pxfy.dev/?url=https%3A%2F%2Fjmp2.uk%2Fstvp-INBA4900023QJ&exp=1790054012&sig=b9f566ea27425b2b33f569792e18007bcc90cd50982b7a5b67a73e913f077a6a", // Xplore India (Proxy 2)
+        "https://cdn-uw2-prod.tsv2.amagi.tv/linear/amg00111-hearstmediaprod-xploreintlnl-samsungnl/playlist.m3u8", // Direct CDN
+        "https://da9c49fa.wurl.com/master/f36d25e7e52f1ba8d7e56eb859c636563214f541/UmFrdXRlblRWLXBsX1ZpYXNhdEV4cGxvcmVfSExT/playlist.m3u8", // Direct CDN
+        "https://jmp2.uk/stvp-INBA4900023QJ", // Xplore India
         "https://jmp2.uk/stvp-USBC2100008DP", // Xplore US
-        "https://cdn-uw2-prod.tsv2.amagi.tv/linear/amg00111-hearstmediaprod-xploreintlnl-samsungnl/playlist.m3u8", // Xplore TV US
         "https://jmp2.uk/stvp-DEAJ0500422A", // Xplore Germany
         "https://jmp2.uk/stvp-ATAJ0500428A", // Xplore Austria
-        "http://web.onair-radio.eu:1935/explorecy/explorecy/playlist.m3u8", // Xplore Greece
         "https://jmp2.uk/stvp-USBB5200028MM", // Mysteries Xplored US
         "https://jmp2.uk/plu-5ad9b8551b95267e225e59c1.m3u8", // Pluto TV Explore US
-        "http://88.212.15.29/live/test_viasat_explore_atk_tv/playlist.m3u8", // Viasat Explore Czechia
-        "https://da9c49fa.wurl.com/master/f36d25e7e52f1ba8d7e56eb859c636563214f541/UmFrdXRlblRWLXBsX1ZpYXNhdEV4cGxvcmVfSExT/playlist.m3u8", // Viasat Explore Poland
-        "https://arwen1.panaka1.cfd/vexplr/usergenrnd7ke5lgt.m3u8", // Viasat Explore Romania
-        "http://stream.mcquack.net/239/index.m3u8" // viju Explore Russia
+        "http://web.onair-radio.eu:1935/explorecy/explorecy/playlist.m3u8", 
+        "http://88.212.15.29/live/test_viasat_explore_atk_tv/playlist.m3u8", 
+        "https://arwen1.panaka1.cfd/vexplr/usergenrnd7ke5lgt.m3u8", 
+        "http://stream.mcquack.net/239/index.m3u8",
+        "https://srv1.pxfy.dev/?url=https%3A%2F%2Fjmp2.uk%2Fstvp-INBA4900023QJ&exp=1790054012&sig=b9f566ea27425b2b33f569792e18007bcc90cd50982b7a5b67a73e913f077a6a" // Slow proxy moved to end
     ];
 
     let currentStreamIndex = 0;
@@ -157,96 +155,90 @@
         var startOverlay = document.getElementById('start-overlay');
         var videoElement = document.getElementById('player');
 
-        // Function to load and play the stream with fallback logic
         function loadStream() {
             if (currentStreamIndex >= streamUrls.length) {
-                alert("All server links are currently down. Please try again later.");
+                alert("All server links are currently offline. Please try again later.");
                 return;
             }
 
             var currentUrl = streamUrls[currentStreamIndex];
-            console.log("Attempting to play stream " + (currentStreamIndex + 1) + " of " + streamUrls.length + ":", currentUrl);
+            console.log("Loading stream " + (currentStreamIndex + 1) + " of " + streamUrls.length + "...");
 
-            // Check if HLS.js is supported (Most modern browsers)
             if (Hls.isSupported()) {
-                if (hls) { hls.destroy(); } // Destroy previous instance if it exists
+                if (hls) { hls.destroy(); } 
                 
+                // ADDED FAST-FAIL TIMEOUTS
                 hls = new Hls({
-                    maxMaxBufferLength: 30, // Prevent infinite buffering loops on dead streams
+                    maxMaxBufferLength: 15, 
+                    manifestLoadingTimeOut: 4000, // Give up on dead links after 4 seconds
+                    manifestLoadingMaxRetry: 0,   // Don't retry dead links
+                    levelLoadingTimeOut: 4000,    // Give up if video chunks are too slow
+                    levelLoadingMaxRetry: 0
                 });
                 
                 hls.loadSource(currentUrl);
                 hls.attachMedia(videoElement);
                 
                 hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                    videoElement.play().catch(e => console.log("Playback prevented by browser: ", e));
+                    videoElement.play().catch(e => console.log("Playback prevented by browser"));
                 });
 
-                // Error handling: if a fatal error occurs, try the next URL
+                // Instantly jump to the next stream on error
                 hls.on(Hls.Events.ERROR, function(event, data) {
                     if (data.fatal) {
-                        console.warn("Fatal error on stream " + (currentStreamIndex + 1) + ". Switching to backup...");
+                        console.warn("Stream " + (currentStreamIndex + 1) + " failed. Switching immediately...");
                         currentStreamIndex++;
-                        loadStream(); // Recursive call to next URL
+                        loadStream();
                     }
                 });
 
             } 
-            // Native HLS support fallback (e.g., Safari on iOS)
             else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+                // Safari Fallback
                 videoElement.src = currentUrl;
-                videoElement.addEventListener('loadedmetadata', function() {
-                    videoElement.play();
-                });
-                videoElement.addEventListener('error', function() {
-                    console.warn("Native playback error on stream " + (currentStreamIndex + 1) + ". Switching to backup...");
+                
+                // Manual timeout for Safari
+                let safariTimeout = setTimeout(() => {
+                    console.warn("Safari stream timeout. Switching...");
                     currentStreamIndex++;
                     loadStream();
-                }, { once: true }); // Ensure event listener doesn't stack
+                }, 5000);
+
+                videoElement.addEventListener('loadedmetadata', function() {
+                    clearTimeout(safariTimeout);
+                    videoElement.play();
+                });
+                
+                videoElement.addEventListener('error', function() {
+                    clearTimeout(safariTimeout);
+                    console.warn("Safari native error. Switching...");
+                    currentStreamIndex++;
+                    loadStream();
+                }, { once: true });
             }
         }
 
         startOverlay.addEventListener('click', function() {
             var docElm = document.documentElement;
-
-            // 1. Request Fullscreen FIRST
-            var requestFS = docElm.requestFullscreen || 
-                            docElm.mozRequestFullScreen || 
-                            docElm.webkitRequestFullscreen || 
-                            docElm.msRequestFullscreen;
+            var requestFS = docElm.requestFullscreen || docElm.mozRequestFullScreen || docElm.webkitRequestFullscreen || docElm.msRequestFullscreen;
             
             if (requestFS) {
                 var fsPromise = requestFS.call(docElm);
                 if (fsPromise !== undefined) {
-                    fsPromise.then(function() {
-                        lockLandscape();
-                    }).catch(function(err) {
-                        console.log("Fullscreen request failed: ", err);
-                        lockLandscape();
-                    });
-                } else {
-                    lockLandscape();
-                }
-            } else {
-                lockLandscape(); 
-            }
+                    fsPromise.then(function() { lockLandscape(); }).catch(function() { lockLandscape(); });
+                } else { lockLandscape(); }
+            } else { lockLandscape(); }
 
-            // 2. Hide the overlay instantly
             startOverlay.style.display = 'none';
 
-            // 3. WAIT 800 milliseconds for the screen to finish rotating/expanding, 
-            // THEN execute the multi-stream HLS loader.
             setTimeout(function() {
                 loadStream();
-            }, 800);
+            }, 500);
         });
 
-        // Function to lock orientation
         function lockLandscape() {
             if (screen.orientation && screen.orientation.lock) {
-                screen.orientation.lock("landscape").catch(function(error) {
-                    console.log("Landscape lock failed: ", error);
-                });
+                screen.orientation.lock("landscape").catch(e => console.log(e));
             }
         }
     });
