@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>B4U Movies Live</title>
+
+<!-- HLS.js Library for playing m3u8 streams in the browser -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+<script>
+    // Tell the Android App to unlock the screen and allow rotation
+    if (typeof AndroidApp !== 'undefined' && typeof AndroidApp.unlockOrientation === 'function') {
+        AndroidApp.unlockOrientation();
+    }
+</script>
+<script>
+    // Disable right-click
+    document.addEventListener("contextmenu", function(event) {
+        event.preventDefault();
+    });
+ 
+    // Block Ctrl+U
+    document.addEventListener("keydown", function(event) {
+        if (event.ctrlKey && (event.key === 'u' || event.key === 'U')) {
+            event.preventDefault();
+            alert("Viewing source is disabled!");
+        }
+    });
+</script>
+
+<style>
+    body {
+        text-align: center;
+        background-color: black;
+        color: white;
+        margin: 0;
+        padding: 0;
+        overflow: hidden; 
+    }
+
+    .video-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100vw;
+        height: 100vh;
+        background: #000;
+    }
+
+    /* Standard Video styling */
+    #player {
+        width: 100%;
+        height: 100%;
+        max-width: 100%;
+        max-height: 100%;
+        background-color: black;
+        object-fit: contain;
+    }
+
+    /* Controls positioned at the top */
+    .home-btn {
+        position: fixed;
+        top: 12px;
+        right: 12px;
+        z-index: 100;
+    }
+
+    .refresh-btn {
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        cursor: pointer;
+        z-index: 100;
+    }
+
+    /* Fullscreen interaction overlay */
+    #start-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        backdrop-filter: blur(5px);
+    }
+
+    .start-btn {
+        background: #e50914;
+        color: white;
+        font-family: Arial, sans-serif;
+        font-size: 24px;
+        font-weight: bold;
+        padding: 20px 40px;
+        border-radius: 50px;
+        box-shadow: 0 0 20px rgba(229, 9, 20, 0.5);
+        animation: pulse 1.5s infinite;
+        user-select: none;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+</style>
+</head>
+<body>
+
+  <!-- Tap to Start Overlay -->
+  <div id="start-overlay">
+      <div class="start-btn">▶ Tap to Watch in Fullscreen</div>
+  </div>
+
+  <div class="video-container">
+      <video id="player" controls playsinline></video>
+  </div>
+
+  <!-- Top Buttons -->
+  <img src="image/refresh.png" alt="Reload" id="refreshButton"
+       onclick="location.reload();" width="70" height="70" class="refresh-btn">
+
+  <a href="tvtvnews.html" class="home-btn">
+    <img src="image/home.jpg" alt="Back To Home" width="65" height="65">
+  </a>
+
+  <!-- Script to force Fullscreen, Landscape mode, and handle HLS fallback logic -->
+  <script>
+    // B4U Movies stream links extracted from the source
+    const streamUrls = [
+        "https://cdn.pishow.tv/ott/live/419/master.m3u8",
+        "https://streams.tangotv.in/B4UMOVIES/ORIGIN/index.m3u8",
+        "https://mumt06.tangotv.in/qYyB8fXVB4UMOVIES/index.m3u8",
+        "http://66.102.126.10:8000/play/a01n/index.m3u8"
+    ];
+
+    let currentStreamIndex = 0;
+    let hls;
+
+    document.addEventListener("DOMContentLoaded", function() {
+        var startOverlay = document.getElementById('start-overlay');
+        var videoElement = document.getElementById('player');
+
+        function loadStream() {
+            if (currentStreamIndex >= streamUrls.length) {
+                alert("All server links are currently offline. Please try again later.");
+                return;
+            }
+
+            var currentUrl = streamUrls[currentStreamIndex];
+            console.log("Loading stream " + (currentStreamIndex + 1) + " of " + streamUrls.length + "...");
+
+            if (Hls.isSupported()) {
+                if (hls) { hls.destroy(); } 
+                
+                // FAST-FAIL TIMEOUTS: Skips dead or blocked links after 4 seconds
+                hls = new Hls({
+                    maxMaxBufferLength: 15, 
+                    manifestLoadingTimeOut: 4000, 
+                    manifestLoadingMaxRetry: 0,   
+                    levelLoadingTimeOut: 4000,    
+                    levelLoadingMaxRetry: 0
+                });
+                
+                hls.loadSource(currentUrl);
+                hls.attachMedia(videoElement);
+                
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    videoElement.play().catch(e => console.log("Playback prevented by browser"));
+                });
+
+                // Instantly jump to the next stream on error
+                hls.on(Hls.Events.ERROR, function(event, data) {
+                    if (data.fatal) {
+                        console.warn("Stream " + (currentStreamIndex + 1) + " failed. Switching immediately...");
+                        currentStreamIndex++;
+                        loadStream();
+                    }
+                });
+
+            } 
+            else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+                // Safari Fallback
+                videoElement.src = currentUrl;
+                
+                // Manual timeout for Safari
+                let safariTimeout = setTimeout(() => {
+                    console.warn("Safari stream timeout. Switching...");
+                    currentStreamIndex++;
+                    loadStream();
+                }, 5000);
+
+                videoElement.addEventListener('loadedmetadata', function() {
+                    clearTimeout(safariTimeout);
+                    videoElement.play();
+                });
+                
+                videoElement.addEventListener('error', function() {
+                    clearTimeout(safariTimeout);
+                    console.warn("Safari native error. Switching...");
+                    currentStreamIndex++;
+                    loadStream();
+                }, { once: true });
+            }
+        }
+
+        startOverlay.addEventListener('click', function() {
+            var docElm = document.documentElement;
+            var requestFS = docElm.requestFullscreen || docElm.mozRequestFullScreen || docElm.webkitRequestFullscreen || docElm.msRequestFullscreen;
+            
+            if (requestFS) {
+                var fsPromise = requestFS.call(docElm);
+                if (fsPromise !== undefined) {
+                    fsPromise.then(function() { lockLandscape(); }).catch(function() { lockLandscape(); });
+                } else { lockLandscape(); }
+            } else { lockLandscape(); }
+
+            startOverlay.style.display = 'none';
+
+            setTimeout(function() {
+                loadStream();
+            }, 500);
+        });
+
+        function lockLandscape() {
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock("landscape").catch(e => console.log(e));
+            }
+        }
+    });
+  </script>
+
+</body>
+</html>
