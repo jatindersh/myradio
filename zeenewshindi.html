@@ -16,7 +16,7 @@
         event.preventDefault();
     });
 
-    // Block Ctrl+U
+    // Block Ctrl+U to prevent viewing source
     document.addEventListener("keydown", function(event) {
         if (event.ctrlKey && (event.key === 'u' || event.key === 'U')) {
             event.preventDefault();
@@ -32,61 +32,147 @@
         width: 100vw;
         height: 100vh;
         background-color: black;
+        color: white;
         overflow: hidden;
+        font-family: Arial, sans-serif;
     }
 
-    /* Make the iframe take up the entire screen */
+    .video-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100vw;
+        height: 100vh;
+        background: #000;
+        position: relative;
+    }
+
+    /* Loading Spinner behind the iframe */
+    .loader {
+        position: absolute;
+        border: 4px solid #333;
+        border-top: 4px solid #e50914;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        z-index: 0;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Standard Iframe styling */
     #player {
         width: 100%;
         height: 100%;
+        max-width: 100%;
+        max-height: 100%;
         border: none;
-        display: block;
+        z-index: 1; /* Sits above the loader */
+        background-color: transparent;
     }
 
     /* Floating Button Styles */
     .overlay-btn {
         position: fixed;
-        top: 15px;
         z-index: 9999;
-        width: 55px;
-        height: 55px;
         cursor: pointer;
         opacity: 0.7;
         transition: opacity 0.2s ease, transform 0.2s ease;
-        background: rgba(0, 0, 0, 0.4);
+        background: rgba(0, 0, 0, 0.5);
         border-radius: 50%;
         padding: 5px;
     }
 
-    .overlay-btn:hover {
-        opacity: 1;
+    .overlay-btn:hover { opacity: 1; }
+    .overlay-btn:active { transform: scale(0.9); }
+
+    .refresh-btn { top: 15px; left: 15px; width: 55px; height: 55px; }
+    .home-btn { top: 15px; right: 15px; width: 55px; height: 55px; border-radius: 8px; }
+
+    /* Switch Server Button */
+    .switch-btn {
+        position: fixed;
+        top: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+        background: rgba(229, 9, 20, 0.8);
+        color: white;
+        border: 1px solid white;
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 14px;
+        cursor: pointer;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        transition: all 0.2s ease;
     }
 
-    .overlay-btn:active {
-        transform: scale(0.9);
+    .switch-btn:active { background: #b20710; }
+
+    /* Fullscreen interaction overlay */
+    #start-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 10000; /* Highest z-index */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        backdrop-filter: blur(5px);
     }
 
-    .refresh-btn {
-        left: 15px;
+    .start-btn {
+        background: #e50914;
+        color: white;
+        font-size: 24px;
+        font-weight: bold;
+        padding: 20px 40px;
+        border-radius: 50px;
+        box-shadow: 0 0 20px rgba(229, 9, 20, 0.6);
+        animation: pulse 1.5s infinite;
+        user-select: none;
     }
 
-    .home-btn {
-        right: 15px;
-        border-radius: 8px; /* Slightly different shape for home if desired */
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
     }
 </style>
 </head>
 <body>
 
-  <!-- The video player loads directly -->
-  <iframe id="player" 
-          src="https://zeenews.india.com/hindi/news/live-tv?videoId=183&taptounmute=0&mute=0&piv=1&pip=0&autoplay=1" 
-          allow="autoplay; encrypted-media; fullscreen; picture-in-picture" 
-          allowfullscreen>
-  </iframe>
+  <!-- Tap to Start Overlay (Mandatory for Quick Fullscreen) -->
+  <div id="start-overlay">
+      <div class="start-btn">▶ Tap for Fullscreen Live TV</div>
+  </div>
 
-  <!-- Refresh Button (Only reloads the iframe) -->
-  <img src="image/refresh.png" alt="Reload" id="refreshButton" onclick="refreshStream();" class="overlay-btn refresh-btn">
+  <div class="video-container">
+    <!-- Loading spinner shows while iframe is fetching -->
+    <div class="loader"></div>
+    
+    <!-- Iframe -->
+    <iframe id="player" 
+            src="" 
+            allow="autoplay; encrypted-media; fullscreen; picture-in-picture" 
+            allowfullscreen>
+    </iframe>
+  </div>
+
+  <!-- Switch Source Button -->
+  <button id="switchBtn" class="switch-btn" onclick="switchServer()">Server 1: Zee News</button>
+
+  <!-- Seamless Iframe Refresh Button -->
+  <img src="image/refresh.png" alt="Reload" class="overlay-btn refresh-btn" onclick="refreshStream();">
 
   <!-- Home Button -->
   <a href="tvtvnews.html">
@@ -94,21 +180,86 @@
   </a>
 
   <script>
-    // Function to reload ONLY the iframe, keeping the app intact
+    // URLs for the two sources
+    const url1 = "https://zeenews.india.com/hindi/news/live-tv?videoId=183&taptounmute=0&mute=0&piv=1&pip=0&autoplay=1";
+    const url2 = "https://www.yupptv.com/fast-tv/zee-news/live";
+    
+    let currentServer = 1;
+    let activeUrl = url1;
+
+    const playerIframe = document.getElementById('player');
+    const startOverlay = document.getElementById('start-overlay');
+    const switchBtn = document.getElementById('switchBtn');
+
+    // Function to reload ONLY the iframe to fix buffering
     function refreshStream() {
-        var playerIframe = document.getElementById('player');
-        
-        // Base URL of the stream
-        var baseUrl = "https://zeenews.india.com/hindi/news/live-tv?videoId=183&taptounmute=0&mute=0&piv=1&pip=0&autoplay=1";
-        
-        // Temporarily clear src to stop the crashed video
-        playerIframe.src = '';
-        
+        playerIframe.src = ''; // Clear video to trigger loader
         setTimeout(function() {
-            // Re-assign the URL with a timestamp cache-buster so the browser is forced to pull a fresh stream
-            playerIframe.src = baseUrl + "&refresh=" + new Date().getTime();
+            // Add a cache-buster parameter to force a hard reload of the stream
+            let cacheBuster = activeUrl.includes('?') ? '&refresh=' : '?refresh=';
+            playerIframe.src = activeUrl + cacheBuster + new Date().getTime();
         }, 150);
     }
+
+    // Function to toggle between Zee News Native and YuppTV
+    function switchServer() {
+        if (currentServer === 1) {
+            currentServer = 2;
+            activeUrl = url2;
+            switchBtn.innerText = "Server 2: YuppTV";
+        } else {
+            currentServer = 1;
+            activeUrl = url1;
+            switchBtn.innerText = "Server 1: Zee News";
+        }
+        refreshStream(); // Reload the iframe with the new URL
+    }
+
+    // Setup Fullscreen and load video on first tap
+    document.addEventListener("DOMContentLoaded", function() {
+        startOverlay.addEventListener('click', function() {
+            var docElm = document.documentElement;
+
+            // Request Fullscreen
+            var requestFS = docElm.requestFullscreen || 
+                            docElm.mozRequestFullScreen || 
+                            docElm.webkitRequestFullscreen || 
+                            docElm.msRequestFullscreen;
+            
+            if (requestFS) {
+                var fsPromise = requestFS.call(docElm);
+                if (fsPromise !== undefined) {
+                    fsPromise.then(function() {
+                        lockLandscape();
+                    }).catch(function(err) {
+                        console.log("Fullscreen request failed: ", err);
+                        lockLandscape();
+                    });
+                } else {
+                    lockLandscape();
+                }
+            } else {
+                lockLandscape(); 
+            }
+
+            // Hide the overlay
+            startOverlay.style.display = 'none';
+
+            // Wait brief moment for fullscreen animation, then load the active URL
+            setTimeout(function() {
+                playerIframe.src = activeUrl;
+            }, 500);
+        });
+
+        // Function to lock orientation to landscape
+        function lockLandscape() {
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock("landscape").catch(function(error) {
+                    console.log("Landscape lock failed: ", error);
+                });
+            }
+        }
+    });
   </script>
 
 </body>
