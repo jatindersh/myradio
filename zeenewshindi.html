@@ -4,18 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Zee News Live TV Hindi</title>
+
 <script>
     // Tell the Android App to unlock the screen and allow rotation
     if (typeof AndroidApp !== 'undefined' && typeof AndroidApp.unlockOrientation === 'function') {
         AndroidApp.unlockOrientation();
     }
-</script>
-<script>
+
     // Disable right-click
     document.addEventListener("contextmenu", function(event) {
         event.preventDefault();
     });
- 
+
     // Block Ctrl+U
     document.addEventListener("keydown", function(event) {
         if (event.ctrlKey && (event.key === 'u' || event.key === 'U')) {
@@ -26,198 +26,89 @@
 </script>
 
 <style>
-    body {
-        text-align: center;
-        background-color: black;
-        color: white;
+    body, html {
         margin: 0;
         padding: 0;
-        overflow: hidden; 
-    }
-
-    .video-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
         width: 100vw;
         height: 100vh;
-        background: #000;
-        position: relative;
+        background-color: black;
+        overflow: hidden;
     }
 
-    /* Loading Spinner behind the iframe */
-    .loader {
-        position: absolute;
-        border: 4px solid #333;
-        border-top: 4px solid #e50914;
-        border-radius: 50%;
-        width: 50px;
-        height: 50px;
-        animation: spin 1s linear infinite;
-        z-index: 0;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    /* Standard Iframe styling */
+    /* Make the iframe take up the entire screen */
     #player {
         width: 100%;
         height: 100%;
-        max-width: 100%;
-        max-height: 100%;
         border: none;
-        z-index: 1; /* Sits above the loader */
-        background-color: transparent;
+        display: block;
     }
 
-    /* Controls positioned at the top */
-    .home-btn {
+    /* Floating Button Styles */
+    .overlay-btn {
         position: fixed;
         top: 15px;
-        right: 15px;
-        z-index: 100;
-        transition: transform 0.2s;
-    }
-
-    .refresh-btn {
-        position: fixed;
-        top: 15px;
-        left: 15px;
+        z-index: 9999;
+        width: 55px;
+        height: 55px;
         cursor: pointer;
-        z-index: 100;
-        transition: transform 0.2s;
+        opacity: 0.7;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 50%;
+        padding: 5px;
     }
 
-    .home-btn:active, .refresh-btn:active {
+    .overlay-btn:hover {
+        opacity: 1;
+    }
+
+    .overlay-btn:active {
         transform: scale(0.9);
     }
 
-    /* Fullscreen interaction overlay */
-    #start-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(0, 0, 0, 0.85);
-        z-index: 9999;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        backdrop-filter: blur(5px);
+    .refresh-btn {
+        left: 15px;
     }
 
-    .start-btn {
-        background: #e50914;
-        color: white;
-        font-family: Arial, sans-serif;
-        font-size: 24px;
-        font-weight: bold;
-        padding: 20px 40px;
-        border-radius: 50px;
-        box-shadow: 0 0 20px rgba(229, 9, 20, 0.5);
-        animation: pulse 1.5s infinite;
-        user-select: none;
-    }
-
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
+    .home-btn {
+        right: 15px;
+        border-radius: 8px; /* Slightly different shape for home if desired */
     }
 </style>
 </head>
 <body>
 
-  <!-- Tap to Start Overlay -->
-  <div id="start-overlay">
-      <div class="start-btn">▶ Tap to Watch in Fullscreen</div>
-  </div>
+  <!-- The video player loads directly -->
+  <iframe id="player" 
+          src="https://zeenews.india.com/hindi/news/live-tv?videoId=183&taptounmute=0&mute=0&piv=1&pip=0&autoplay=1" 
+          allow="autoplay; encrypted-media; fullscreen; picture-in-picture" 
+          allowfullscreen>
+  </iframe>
 
-  <div class="video-container">
-    <!-- Loading spinner shows while iframe is fetching -->
-    <div class="loader"></div>
-    
-    <!-- Iframe configured for autoplay -->
-    <iframe id="player" 
-            src="" 
-            allow="autoplay; encrypted-media; fullscreen; picture-in-picture" 
-            allowfullscreen>
-    </iframe>
-  </div>
+  <!-- Refresh Button (Only reloads the iframe) -->
+  <img src="image/refresh.png" alt="Reload" id="refreshButton" onclick="refreshStream();" class="overlay-btn refresh-btn">
 
-  <!-- Seamless Iframe Refresh Button -->
-  <img src="image/refresh.png" alt="Reload" id="refreshButton"
-       onclick="refreshStream();" width="60" height="60" class="refresh-btn">
-
-  <a href="tvtvnews.html" class="home-btn">
-    <img src="image/home.jpg" alt="Back To Home" width="60" height="60" style="border-radius: 8px;">
+  <!-- Home Button -->
+  <a href="tvtvnews.html">
+    <img src="image/home.jpg" alt="Back To Home" class="overlay-btn home-btn">
   </a>
 
   <script>
-    const streamUrl = "https://zeenews.india.com/hindi/news/live-tv?videoId=183&taptounmute=0&mute=0&piv=1&pip=0&autoplay=1";
-    const playerIframe = document.getElementById('player');
-    const startOverlay = document.getElementById('start-overlay');
-
-    // Function to reload ONLY the iframe, keeping fullscreen active
+    // Function to reload ONLY the iframe, keeping the app intact
     function refreshStream() {
-        // Temporarily clear src to force browser to re-fetch the stream
+        var playerIframe = document.getElementById('player');
+        
+        // Base URL of the stream
+        var baseUrl = "https://zeenews.india.com/hindi/news/live-tv?videoId=183&taptounmute=0&mute=0&piv=1&pip=0&autoplay=1";
+        
+        // Temporarily clear src to stop the crashed video
         playerIframe.src = '';
+        
         setTimeout(function() {
-            // Append a unique timestamp to bypass strict browser caching on failed streams
-            playerIframe.src = streamUrl + "&refresh=" + new Date().getTime();
-        }, 200);
+            // Re-assign the URL with a timestamp cache-buster so the browser is forced to pull a fresh stream
+            playerIframe.src = baseUrl + "&refresh=" + new Date().getTime();
+        }, 150);
     }
-
-    document.addEventListener("DOMContentLoaded", function() {
-        startOverlay.addEventListener('click', function() {
-            var docElm = document.documentElement;
-
-            // 1. Request Fullscreen FIRST
-            var requestFS = docElm.requestFullscreen || 
-                            docElm.mozRequestFullScreen || 
-                            docElm.webkitRequestFullscreen || 
-                            docElm.msRequestFullscreen;
-            
-            if (requestFS) {
-                var fsPromise = requestFS.call(docElm);
-                if (fsPromise !== undefined) {
-                    fsPromise.then(function() {
-                        lockLandscape();
-                    }).catch(function(err) {
-                        console.log("Fullscreen request failed: ", err);
-                        lockLandscape();
-                    });
-                } else {
-                    lockLandscape();
-                }
-            } else {
-                lockLandscape(); 
-            }
-
-            // 2. Hide the overlay instantly
-            startOverlay.style.display = 'none';
-
-            // 3. WAIT 800 milliseconds for the screen to finish rotating/expanding, 
-            // THEN load the video so the player doesn't crash.
-            setTimeout(function() {
-                playerIframe.src = streamUrl;
-            }, 800);
-        });
-
-        // Function to lock orientation
-        function lockLandscape() {
-            if (screen.orientation && screen.orientation.lock) {
-                screen.orientation.lock("landscape").catch(function(error) {
-                    console.log("Landscape lock failed: ", error);
-                });
-            }
-        }
-    });
   </script>
 
 </body>
