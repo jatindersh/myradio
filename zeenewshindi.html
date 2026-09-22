@@ -93,27 +93,6 @@
     .refresh-btn { top: 15px; left: 15px; width: 55px; height: 55px; }
     .home-btn { top: 15px; right: 15px; width: 55px; height: 55px; border-radius: 8px; }
 
-    /* Switch Server Button */
-    .switch-btn {
-        position: fixed;
-        top: 15px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 9999;
-        background: rgba(229, 9, 20, 0.8);
-        color: white;
-        border: 1px solid white;
-        padding: 10px 20px;
-        border-radius: 20px;
-        font-weight: bold;
-        font-size: 14px;
-        cursor: pointer;
-        box-shadow: 0 0 10px rgba(0,0,0,0.5);
-        transition: all 0.2s ease;
-    }
-
-    .switch-btn:active { background: #b20710; }
-
     /* Fullscreen interaction overlay */
     #start-overlay {
         position: fixed;
@@ -168,9 +147,6 @@
     </iframe>
   </div>
 
-  <!-- Switch Source Button -->
-  <button id="switchBtn" class="switch-btn" onclick="switchServer()">Server 1: Zee News</button>
-
   <!-- Seamless Iframe Refresh Button -->
   <img src="image/refresh.png" alt="Reload" class="overlay-btn refresh-btn" onclick="refreshStream();">
 
@@ -180,39 +156,20 @@
   </a>
 
   <script>
-    // URLs for the two sources
-    const url1 = "https://zeenews.india.com/hindi/news/live-tv?videoId=183&taptounmute=0&mute=0&piv=1&pip=0&autoplay=1";
-    const url2 = "https://www.yupptv.com/fast-tv/zee-news/live";
+    // Direct Zee News URL
+    const streamUrl = "https://zeenews.india.com/hindi/news/live-tv?videoId=183&taptounmute=0&mute=0&piv=1&pip=0&autoplay=1";
     
-    let currentServer = 1;
-    let activeUrl = url1;
-
     const playerIframe = document.getElementById('player');
     const startOverlay = document.getElementById('start-overlay');
-    const switchBtn = document.getElementById('switchBtn');
 
     // Function to reload ONLY the iframe to fix buffering
     function refreshStream() {
         playerIframe.src = ''; // Clear video to trigger loader
         setTimeout(function() {
             // Add a cache-buster parameter to force a hard reload of the stream
-            let cacheBuster = activeUrl.includes('?') ? '&refresh=' : '?refresh=';
-            playerIframe.src = activeUrl + cacheBuster + new Date().getTime();
+            let cacheBuster = streamUrl.includes('?') ? '&refresh=' : '?refresh=';
+            playerIframe.src = streamUrl + cacheBuster + new Date().getTime();
         }, 150);
-    }
-
-    // Function to toggle between Zee News Native and YuppTV
-    function switchServer() {
-        if (currentServer === 1) {
-            currentServer = 2;
-            activeUrl = url2;
-            switchBtn.innerText = "Server 2: YuppTV";
-        } else {
-            currentServer = 1;
-            activeUrl = url1;
-            switchBtn.innerText = "Server 1: Zee News";
-        }
-        refreshStream(); // Reload the iframe with the new URL
     }
 
     // Setup Fullscreen and load video on first tap
@@ -245,9 +202,9 @@
             // Hide the overlay
             startOverlay.style.display = 'none';
 
-            // Wait brief moment for fullscreen animation, then load the active URL
+            // Wait brief moment for fullscreen animation, then load the video
             setTimeout(function() {
-                playerIframe.src = activeUrl;
+                playerIframe.src = streamUrl;
             }, 500);
         });
 
